@@ -16,7 +16,7 @@ class Product extends BaseModel
 {
     use ProductRelationships;
 
-    protected $fillable = ['title', 'description', 'category_id', 'brand_id', 'unit_id', 'group_id', 'taxable', 'tax_type', 'tax_id', 'product_type', 'branch_id', 'imageURL', 'created_by'];
+    protected $fillable = ['title', 'description', 'category_id', 'brand_id', 'unit_id', 'group_id', 'taxable', 'tax_type', 'tax_id', 'product_type', 'branch_id', 'imageURL', 'created_by', 'is_customization'];
 
     public static function groupId($id)
     {
@@ -98,7 +98,7 @@ class Product extends BaseModel
 
         // Log::info("inStockProducts form products model: ".print_r($inStockProducts, true));
 
-        $selectProducts = 'products.id AS productID, products.title, products.category_id, products.taxable, products.tax_id, products.tax_type, products.imageURL AS productImage, IF( products.taxable, IF(products.tax_id, taxes.percentage, branch_tax.taxPercentage ), 0) AS taxPercentage,
+        $selectProducts = 'products.id AS productID, products.title, products.category_id, products.is_customization, products.taxable, products.tax_id, products.tax_type, products.imageURL AS productImage, IF( products.taxable, IF(products.tax_id, taxes.percentage, branch_tax.taxPercentage ), 0) AS taxPercentage,
 	  (SELECT GROUP_CONCAT(name) FROM product_attributes WHERE FIND_IN_SET(product_attributes.id, attribute_group.product_attribute_ids)) AS attributeName';
 
         $selectBranches = 'branches.id AS branch_id, If(branches.tax_id, taxes.percentage, (SELECT percentage from taxes WHERE is_default = 1 LIMIT 1)) AS taxPercentage';

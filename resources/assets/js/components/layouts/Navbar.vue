@@ -98,6 +98,12 @@
                         </a>
                     </li>
                     <li>
+                        <a :href="publicPath+'/orders'" class="app-color-text">
+                            <i class="la la-shopping-cart"></i>
+                            {{ trans('lang.sales') }}
+                        </a>
+                    </li>
+                    <!-- <li>
                         <a :href="publicPath+'/receives'" class="app-color-text">
                             <i class="la la-truck la-2x"></i>
                             {{
@@ -116,7 +122,7 @@
                             {{
                             trans('lang.settings') }}
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
             <div class="side-nav-close"

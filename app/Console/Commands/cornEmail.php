@@ -57,7 +57,7 @@ class cornEmail extends Command
         foreach ( $users as $user){
 
             Mail::raw("This is automatically generated Update", function ($message) use ($user){
-                $message->from('gain@booking.com', 'Gain Booking');
+                $message->from('noble-pos@booking.com', 'Noble POS');
                 $message->to($user->email)->subject('New Service/ Event Notification');
             });
         }

@@ -25,7 +25,7 @@ use App\Models\OrderItems;
 use App\Libraries\AllSettingFormat;
 use App\Libraries\imageHandler;
 use Milon\Barcode\DNS1D;
-
+use stdClass;
 
 class ProductsController extends Controller
 {
@@ -100,6 +100,7 @@ class ProductsController extends Controller
         if ($file = $image) {
             $fileNameToStore = $imageHandler->imageUpload($image, 'product_', 'uploads/products/');
         }
+        
         $productData = [
             'title' => $name,
             'description' => $description,
@@ -109,7 +110,8 @@ class ProductsController extends Controller
             'unit_id' => $unit,
             'product_type' => $product_type,
             'imageURL' => $fileNameToStore,
-            'created_by' => $created_by
+            'created_by' => $created_by,
+            'is_customization' => $request->is_customization
         ];
         if ($taxID == 'no-tax') {
             $productData['taxable'] = 0;

@@ -51,6 +51,16 @@
                     <div>Order Management</div>
                 </a>
             </li>
+
+            <li
+                v-if="orders==1"
+                :class="{'active-side-bar': currentUrl == publicPath+'/orders', 'active-hover': isConnected || offline == 0}"
+            >
+                <a :href="publicPath+'/orders'" :class="{disabled:!isConnected && offline == 1}">
+                    <i class="la la-list-ul"></i>
+                    <div>Todos Management</div>
+                </a>
+            </li>
             <!-- <li
                 v-if="receives==1"
                 :class="{'active-side-bar': currentUrl == publicPath+'/receives', 'active-hover': isConnected || offline == 0}"

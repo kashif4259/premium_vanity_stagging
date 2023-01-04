@@ -1271,4 +1271,28 @@ return array(
     //orders management
     'orders' => 'Orders Management',
     'order_details' => 'Order Details',
+    'vanity_hole' => 'Vanity Hole',
+    'vanity_filler' => 'FILLER',
+    'vanity_handles' => 'HANDLES',
+    'vanity_drawers' => 'DRAWERS SIDE',
+    'vanity_color' => 'COLOR',
+    'vanity_size' => 'SIZE',
+    'vanity_wall' => 'Wall SIDE',
+    'generate_packing_slip' => 'Generate Packing Slip',
+    'print_packing_slip' => 'Print Packing Slip',
+    'delivery_or_pickup' => 'Delivery OR Pickup',
+    'delivery_or_pickup_date' => 'Delivery OR Pickup Date',
+    'delivery_charges' => 'Delivery Charges',
+
+    'is_customization' => 'Product Customization',
+    'change_order_status' => 'Change Order Status',
+
+    'order_status_pending' => 'Pending',
+    'order_status_processing' => 'Processing',
+    'order_status_ready' => 'Ready',
+    'order_status_pickedup' => 'Pickedup',
+    'order_status_cancelled' => 'Cancelled',
+    'order_delivery_type' => 'Order Delivery Type',
+    'order_delivery_date' => 'Delivery Date',
+    'order_pickup_date' => 'Pickedup Date'
 );

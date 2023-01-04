@@ -1,0 +1,34 @@
+'1', 'Kashif Asghar', 'kashif-asghar@hotmail.com', '$2y$10$/TThGjTzoxlOxZeHF.Nq0.TaFnTvGnTaUQXNL8/6WUWE1aZQlWxZC', 'administrator', '2', '0', 'Y', 'Y', '1', 'Etc/Universal', 'UTC - Coordinated Universal Time', '2022-09-30 01:34:41', '2022-09-30 01:34:41', '1', '2022-09-30 01:34:41', '1'
+
+
+ALTER TABLE `orion_pos`.`invites` 
+CHANGE COLUMN `customer_id` `customer_id` INT UNSIGNED NULL DEFAULT NULL ;
+
+
+ALTER TABLE `orion_pos`.`invites` 
+CHANGE COLUMN `group_id` `group_id` INT UNSIGNED NOT NULL DEFAULT '2' ;
+
+
+ALTER TABLE `orion_pos`.`users` 
+CHANGE COLUMN `group_id` `group_id` INT UNSIGNED NOT NULL DEFAULT '2' ;
+
+
+ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES categories(id);
+
+ALTER TABLE products ADD FOREIGN KEY (inventory_id) REFERENCES inventory(id);
+
+ALTER TABLE inventory ADD FOREIGN KEY (product_id) REFERENCES products(id);
+
+ALTER TABLE inventory ADD FOREIGN KEY (location_id) REFERENCES locations(id);
+
+ALTER TABLE users ADD FOREIGN KEY (customer_id) REFERENCES customers(id);
+
+ALTER TABLE invites ADD FOREIGN KEY (customer_id) REFERENCES customers(id);
+
+ALTER TABLE invites ADD FOREIGN KEY (group_id) REFERENCES `groups`(id);
+
+ALTER TABLE users ADD FOREIGN KEY (group_id) REFERENCES `groups`(id);
+
+select * from users;
+
+

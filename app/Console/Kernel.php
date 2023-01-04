@@ -13,7 +13,9 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        Commands\cornEmail::class
+        Commands\cornEmail::class,
+        Commands\Orders\Notifications::class,
+        Commands\Orders\OrderDeliveryStatusUpdate::class
     ];
 
     /**
@@ -26,6 +28,12 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('hour:update')
             ->hourly();
+
+        $schedule->command('run:order_notifications',['daily'])
+            ->daily();
+
+        $schedule->command('run:update-order-delivery-status',['daily'])
+            ->daily();
     }
 
     /**

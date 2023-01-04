@@ -732,4 +732,14 @@ class PermissionController extends Controller
         return 0;
     }
 
+    public function todoManagePermission()
+    {
+        if($this->permissionCheck()->hasPermission('can_manage_todo') || $this->permissionCheck()->isAdmin())
+        {
+            return 1;
+        }
+        
+        return 0;
+    }
+
 }

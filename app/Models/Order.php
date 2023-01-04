@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Relationships\OrderRelationship;
-use DB;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\API\PermissionController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -21,8 +21,7 @@ class Order extends BaseModel
         'total_tax',
         'all_discount',
         'total',
-        'product_custom_details',
-        'due_amount', 'type', 'profit', 'status', 'branch_id', 'transfer_branch_id', 'table_id', 'created_by', 'returned_invoice', 'return_type', 'customer_id', 'supplier_id', 'invoice_id', 'created_at'];
+        'due_amount', 'type', 'profit', 'status', 'branch_id', 'transfer_branch_id', 'table_id', 'created_by', 'returned_invoice', 'return_type', 'customer_id', 'supplier_id', 'invoice_id', 'created_at', 'delivery_or_pickup', 'delivery_or_pickup_date', 'delivery_charges', 'order_status'];
 
     protected $casts = [
         'sub_total' => 'float',
@@ -984,7 +983,7 @@ class Order extends BaseModel
 
     public static function salesListDelete($id)
     {
-        Order::where('id', $id)->update(['status' => 'delete']);
+        Order::where('id', $id)->update(['status' => 'delete','order_status' => 'cancelled']);
 
     }
 
@@ -1117,4 +1116,31 @@ class Order extends BaseModel
         return Order::select(DB::raw('abs(sum(orders.profit)) as profit'))->where('orders.returned_invoice', $returnInvoice)->where('orders.order_type', 'sales')->where('orders.status', '=', 'done')->first();
     }
 
+    public static function getPackingSlipHeaderInfo($id)
+    {
+        return Order::query()->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+            ->select(
+                'orders.id',
+                DB::raw('DATE_FORMAT(orders.date,"%m/%d/%Y") AS date '),
+                'orders.invoice_id',
+                DB::raw("(CASE WHEN customers.first_name <> '' AND customers.last_name <> '' THEN CONCAT(customers.first_name, ' ',customers.last_name) ELSE 'Walk-in customer' END) AS customer ")
+                
+            )
+            ->where('orders.order_type', '=', 'sales')
+            ->where('orders.status', '=', 'done')
+            ->where('orders.id', '=', $id)->first();
+    }
+
+    public static function updateOrderStatus($data)
+    {
+        return DB::table('orders')
+            ->where('id', $data['id'])
+            ->update(['order_status' => $data['order_status']]);        
+    }
+
+    public static function getOrdersForNotificationsCommand()
+    {
+        return Order::where('order_type', '=', 'sales')->where('status', '=', 'done')->get();
+    }
+    
 }

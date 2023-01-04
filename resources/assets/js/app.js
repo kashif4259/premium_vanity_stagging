@@ -436,11 +436,13 @@ Vue.component('app-install-wizard', require('./components/installer/Installer'))
 
 Vue.component('app-database-wizard', require('./components/installer/DatabaseWizard'));
 
-//Sales
+//Orders
 Vue.component('orders-management-component', require('./components/ordersManagement/OrdersManagement.vue'));
 Vue.component('orders-list-action-component', require('./components/ordersManagement/OrdersListActionComponent.vue'));
 Vue.component('order-details', require('./components/ordersManagement/OrderDetails.vue'));
-
+Vue.component('order-packing-slip', require('./components/ordersManagement/modal/GeneratePackingSlipComponent.vue'));
+Vue.component('order-packing-slip', require('./components/ordersManagement/modal/GeneratePackingSlipComponent.vue'));
+Vue.component('order-status', require('./components/ordersManagement/modal/ChangeOrderStatus.vue'));
 Window.app = new Vue({
     el: '#app',
     data: {

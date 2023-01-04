@@ -1,0 +1,105 @@
+BASE_URL : http://23.239.18.91/orion_pos/public/index.php/api/v1/admin/
+
+
+
+login api
+
+URL : auth/login
+
+Request Type: POST
+
+Request Body: 
+
+{
+	"username" : "admin",
+	"password":"admin"
+}
+
+=================================================================================
+
+
+categories listing api
+
+URL : BASE_URL+categories
+
+Request Type: GET
+
+Request Body: 
+
+{
+	"rpp" : 10,
+	"page": 1
+}
+
+==================================================================================
+
+
+create category api
+
+URL : BASE_URL+categories/create
+
+Request Type: POST
+
+Request Body: 
+
+{
+	"parent_category":9,
+	"category_name" : "categor name here",
+	"status":"Y"
+}
+
+==================================================================================
+
+
+update category api
+
+URL : BASE_URL+categories/update
+
+Request Type: POST
+
+Request Body:
+
+{
+	"parent_category":9,
+	"category_name" : "dddd dfdf",
+	"category_id":17,
+	"status":"Y"
+}
+
+==================================================================================
+
+category detail apii
+
+URL : http://localhost:8000/api/v1/admin/categories/detail
+
+Request Type: GET
+
+Request Body:
+
+{
+	"category_id":1
+}
+
+=================================================================================
+
+delete category api
+
+URL : BASE_URL+categories/delete
+
+Request Type: DELETE
+
+Request Body: 
+
+{
+	"category_id":19
+}
+
+================================================================================
+
+parent category api when add new category then this api for drop down
+
+URL : BASE_URL+categories/parent
+
+Request Type: GET
+
+Request Body: Not reuquired

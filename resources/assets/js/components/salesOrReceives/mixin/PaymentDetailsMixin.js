@@ -48,14 +48,11 @@ export default {
             shippingAddress: '',
             shippingData: [],
             shippingInfo: {},
-            salesProductVariations: {
-                hole: "",
-                filler: "",
-                handles: "",
-                drawersSide: "",
-                color: "",
-                size: ""
-            },
+            deliveryInfo: {},
+            deliveryOrPickup: '',
+            deliveryOrPickupDate: '',
+            deliveryCharges:0,
+            addDeliveryInfo:'',
             returnCondition: this.salesOrReturnType === 'returns' || this.receiveOrReturnType === 'returns',
             salesNote: "",
             isEmptyObj: (object) => {
@@ -91,6 +88,20 @@ export default {
             showItemCollapse: false,
             variantTitle: "",
         };
+
+        this.deliveryInfo = {
+            productID: null,
+            variantID: null,
+            taxID: null,
+            orderType: "delivery",
+            productTitle: "Delivery",
+            price: 0,
+            quantity: -1,
+            calculatedPrice: 0,
+            cartItemNote: "",
+            showItemCollapse: false,
+            variantTitle: "",
+        };
     },
     watch: {
         calculateBank: function (newValue) {
@@ -112,6 +123,13 @@ export default {
             this.shippingInfo.price = value;
             this.shippingInfo.calculatedPrice = value;
             this.addShipmentStatus(1);
+        },
+        deliveryCharges: function (value) {
+            if (value == '') value = 0;
+            else value = parseFloat(value);
+            this.deliveryInfo.price = value;
+            this.deliveryInfo.calculatedPrice = value;
+            // this.addDeliveryStatus('delivery');
         },
         paid: 'preventCreditPayment',
     },
@@ -149,12 +167,20 @@ export default {
             this.addShipment = value;
             if (parseInt(this.addShipment) === 1) {
                 this.addShipmentInfo = true;
-                this.$emit('addShipmentInfo', this.shippingInfo, true);
+                this.$emit('addShipmentInfo', this.shippingInfo, true, 'shipment');
             } else {
                 this.addShipmentInfo = false;
-                this.$emit('addShipmentInfo', this.shippingInfo, false);
+                this.$emit('addShipmentInfo', this.shippingInfo, false, 'shipment');
             }
         },
+        addDeliveryStatus(value) {
+            if(value == 'delivery')
+            {
+                this.addDeliveryInfo = true;
+                this.$emit('addShipmentInfo', this.deliveryInfo, true, 'delivery');
+            }
+        },
+        
         getPaymentAmount(value) {
             this.paid = value;
             this.calculateBalance();
@@ -344,18 +370,31 @@ export default {
             if (parseInt(this.addShipment) === 1) {
 
                 this.$validator.validateAll().then((result) => {
+                    // console.log(result+"shipping");return false;
                     if (result) {
                         let cartItemsToStore = this.finalCart;
                         cartItemsToStore.shippingPrice = this.shippingPrice;
                         cartItemsToStore.shippingAreaId = this.shippingAreaId;
                         cartItemsToStore.shippingAreaSddress = this.shippingAddress;
+                        
                         this.storeInvoiceCart(action);
                     } else if (!result && action === 'continue') {
                         this.storeInvoiceCart(action);
                     }
                 });
             } else {
-                this.storeInvoiceCart(action);
+                this.$validator.validateAll().then((result) => {
+                    
+                    if (result) {
+                        let cartItemsToStore = this.finalCart;
+                        cartItemsToStore.deliveryOrPickup = this.deliveryOrPickup;
+                        cartItemsToStore.deliveryOrPickupDate = this.deliveryOrPickupDate;
+                        cartItemsToStore.deliveryCharges = this.deliveryCharges;
+                        this.storeInvoiceCart(action);
+                    } else if (!result && action === 'continue') {
+                        this.storeInvoiceCart(action);
+                    }
+                });
             }
         },
 

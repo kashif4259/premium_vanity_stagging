@@ -7,13 +7,27 @@
                 <i class="la la-money la-2x"/>
             </a>
 
-            <a v-if="salesListDelete == 1" href="" class='action-button'  data-toggle="modal" data-target="#confirm-delete" @click.prevent="selectedDeletableId(rowData.id,rowIndex)"><i class="la la-trash-o la-2x"></i></a>
+            <a v-if="salesListDelete == 1 && this.rowData.order_status != 'Cancelled'" href="" class='action-button'  data-toggle="modal" data-target="#confirm-delete" @click.prevent="selectedDeletableId(rowData.id,rowIndex)"><i class="la la-trash-o la-2x"></i></a>
 
-            <a v-if="salesListEdit == 1" href="" class='action-button'  data-toggle="modal"
+            <!-- <a v-if="salesListEdit == 1" href="" class='action-button'  data-toggle="modal"
                data-target="#date-edit-modal"
-               @click.prevent="editOrderDate(rowData,rowIndex)">
+               @click.prevent="editSalesDate(rowData,rowIndex)">
                 <i class="la la-edit la-2x"></i>
+            </a> -->
+
+            <!-- generate packing slip button here-->
+            <a v-if="salesListEdit == 1 && this.rowData.order_status != 'Cancelled' " href="" class='action-button'  data-toggle="modal"
+               data-target="#generate-packing-slip-modal"
+               @click.prevent="generatePackingSlip(rowData,rowIndex)">
+                <i class="la la-file la-2x"></i>
             </a>
+
+            <a v-if="salesListEdit == 1 && this.rowData.order_status != 'Pending' && this.rowData.order_status != 'Pickedup' && this.rowData.order_status != 'Cancelled' && this.rowData.order_status != 'Hold' " href="" class='action-button'  data-toggle="modal"
+               data-target="#change-order-status-modal"
+               @click.prevent="changeOrderStatus(rowData,rowIndex)">
+                <i class="la la-building la-2x"></i>
+            </a>
+
         </div>
 
         <i class="la la-ellipsis-v la-1x"/>
@@ -47,9 +61,16 @@
             selectedDeletableId(id,index) {
                 this.$hub.$emit('selectedDeletableId', id, index);
             },
-            editOrderDate(rowdata, index) {
+            editSalesDate(rowdata, index) {
                 this.$hub.$emit('editSalesDate', rowdata, index);
             },
+            generatePackingSlip(rowdata, index){
+                this.$hub.$emit('generatePackingSlip', rowdata, index);
+            },
+
+            changeOrderStatus(rowData, index){
+                this.$hub.$emit('changeOrderStatus', rowData, index);
+            }
 
         }
     }

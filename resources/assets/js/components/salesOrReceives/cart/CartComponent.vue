@@ -239,7 +239,7 @@
                     </div>
                 </div>
                 <div class="form-row mx-0 px-2  collapse-animation"
-                     :class="{'collapsed':cartItem.showItemCollapse}">
+                     :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
                     <div class="form-group pl-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']">
                         <label :for="'cart-item-quantity'+index" class="label-in-cart ">
                             {{ trans('lang.quantity') }}</label>
@@ -275,6 +275,50 @@
                                   v-model="cartItem.cartItemNote">
                         </textarea>
                     </div>
+
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                        <label :for="'cart-item-vanity-hole'+index" class="label-in-cart ">
+                            {{ trans('lang.vanity_hole') }}</label>
+                            <input type="text"
+                                   class="form-control" v-model="cartItem.product_variations.hole">
+                    </div>
+                    <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization">
+                        <label :for="'cart-vanity-filler'+index" class="label-in-cart ">
+                            {{ trans('lang.vanity_filler') }}</label>
+                            <input type="text"
+                                   class="form-control" v-model="cartItem.product_variations.filler">
+                    </div>
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                        <label :for="'cart-item-vanity-handles'+index" class="label-in-cart ">
+                            {{ trans('lang.vanity_handles') }}</label>
+                            <input type="text"
+                                   class="form-control" v-model="cartItem.product_variations.handles">
+                    </div>
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                        <label :for="'cart-item-vanity-drawers'+index" class="label-in-cart ">
+                            {{ trans('lang.vanity_drawers') }}</label>
+                            <input type="text"
+                                   class="form-control" v-model="cartItem.product_variations.drawer_side">
+                    </div>
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                        <label :for="'cart-item-vanity-drawers'+index" class="label-in-cart ">
+                            {{ trans('lang.vanity_wall') }}</label>
+                            <input type="text"
+                                   class="form-control" v-model="cartItem.product_variations.wall_side">
+                    </div>
+                    <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization">
+                        <label :for="'cart-item-vanity-color'+index" class="label-in-cart ">
+                            {{ trans('lang.vanity_color') }}</label>
+                            <input type="text"
+                                   class="form-control" v-model="cartItem.product_variations.color">
+                    </div>
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                        <label :for="'cart-item-vanity-size'+index" class="label-in-cart ">
+                            {{ trans('lang.vanity_size') }}</label>
+                            <input type="text"
+                                   class="form-control" v-model="cartItem.product_variations.size">
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -953,6 +997,7 @@ export default {
         $('#cart-modal-for-mobile-view').on('shown.bs.modal', function (e) {
             instance.cartMinHeightSet();
         });
+        console.log(this.cart);
     },
     methods: {
         checkDiscountType() {

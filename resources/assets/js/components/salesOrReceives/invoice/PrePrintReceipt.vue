@@ -117,7 +117,6 @@ export default {
             }
         },
         getShipmentAmount() {
-            alert('dffd');
             return this.add_shipping_info ? this.numberFormat(this.shipmentAmount) + '</td></tr>' : 'N/A';
         },
         getCustomerOrSupplierInfo() {

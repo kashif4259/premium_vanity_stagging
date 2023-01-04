@@ -1,5 +1,12 @@
 <template>
     <div class="main-layout-wrapper">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent m-0">
+                <li class="breadcrumb-item">
+                    <span>{{trans('lang.orders')}}</span>
+                </li>
+            </ol>
+        </nav>
         <div class="main-layout-card">
 
             <div v-if="!hasData(tableOptions)">
@@ -54,8 +61,37 @@
                                             :modal-title="trans('lang.sales_date_edit')"/>
                     </div>
                 </div>
+
+
+                
+
             </div>
-           
+            <!-- generate packing slip modal generate-packing-slip-modal-->
+            <div id="generate-packing-slip-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-xl modal-xxl" role="document">
+                        <order-packing-slip class="modal-content"
+                                        v-if="isGeneratePackingSlip"
+                                        :modalIdForGeneratePackingSlip="modalIdForGeneratePackingSlip"
+                                        :row-data="selectedSalesForGeneratePackingSlip"
+                                        :pre_loader="dueModalPreloader"
+                                        @emitForGeneratePackingSlip="emitForGeneratePackingSlip"
+                                        :modal-title="trans('lang.generate_packing_slip')"/>
+                </div>
+            </div>
+
+            <!-- change order status popup-->
+            <div id="change-order-status-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                        <order-status class="modal-content"
+                                        v-if="isChangeOrderStatus"
+                                        :modalIdForChangeOrderStatus="modalIdForChangeOrderStatus"
+                                        :row-data="selectedSalesForChangeOrderStatus"
+                                        :pre_loader="dueModalPreloader"
+                                        @emitForChangeOrderStatus="emitForChangeOrderStatus"
+                                        :modal-title="trans('lang.change_order_status')"/>
+                </div>
+            </div>
+
             <!-- Delete Modal -->
             <confirmation-modal id="confirm-delete" :message="'sales_list_deleted_permanently'" :firstButtonName="'yes'"
                                 :secondButtonName="'no'"
@@ -77,11 +113,15 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 isActive: false,
                 isDateEditActive: false,
                 selectedSalesForDateEdit: null,
+                selectedSalesForGeneratePackingSlip: null,
+                selectedSalesForChangeOrderStatus: null,
                 isActiveAttributeModal: false,
                 isActiveAttributeModalEdit: false,
                 selectedItemId: "",
                 modalID: "#due-amount-edit-modal",
                 modalIdForSalesDateEdit: "#date-edit-modal",
+                modalIdForGeneratePackingSlip: '#generate-packing-slip-modal',
+                modalIdForChangeOrderStatus: '#change-order-status-modal',
                 order_type: "sales",
                 hidePreLoader: false,
                 exportToVue: false,
@@ -95,7 +135,11 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 hasData: value => {
                     return !_.isEmpty(value);
                 },
-                currentBranch: JSON.parse(this.current_branch)
+                currentBranch: JSON.parse(this.current_branch),
+                isGeneratePackingSlip: false,
+                isGeneratePackingSlipAttributeModal: false,
+                isChangeOrderStatus: false,
+                isChangeOrderStatusAttributeModal: false
             };
         },
         created() {
@@ -119,6 +163,17 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 instance.isDateEditActive = true;
             });
 
+            this.$hub.$on("generatePackingSlip", function (rowdata, index) {
+                instance.isGeneratePackingSlipAttributeModal = false;
+                instance.selectedSalesForGeneratePackingSlip = rowdata;
+                instance.isGeneratePackingSlip = true;
+            });
+
+            this.$hub.$on("changeOrderStatus", function (rowdata, index) {
+                instance.isChangeOrderStatusAttributeModal = false;
+                instance.selectedSalesForChangeOrderStatus = rowdata;
+                instance.isChangeOrderStatus = true;
+            });
 
             $("#branch-or-cash-register-select-modal").on(
                 "hidden.bs.modal",
@@ -183,6 +238,24 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                         sortable: true
                                     },
                                     {
+                                        title: "lang.order_delivery_type",
+                                        key: "is_delivery_or_pickup",
+                                        type: "text",
+                                        sortable: true
+                                    },
+                                    {
+                                        title: "lang.order_delivery_date",
+                                        key: "delivery_date",
+                                        type: "text",
+                                        sortable: true
+                                    },
+                                    {
+                                        title: "lang.order_pickup_date",
+                                        key: "pickup_date",
+                                        type: "text",
+                                        sortable: true
+                                    },
+                                    {
                                         title: "lang.total",
                                         key: "total",
                                         type: "text",
@@ -200,7 +273,7 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                         componentName: "orders-list-action-component"
                                     }
                                 ],
-                                source: "/sales-list-data/" + instance.currentBranch.id,
+                                source: "/orders/sales-list-data/" + instance.currentBranch.id,
                                 summary: true,
                                 search: true,
                                 sortedBy: "id",
@@ -246,10 +319,13 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                         ]
                                     },
                                     {
-                                        title: 'lang.order_type', type: 'dropdown', key: 'order_status', options: [
+                                        title: 'lang.order_status', type: 'dropdown', key: 'order_status', options: [
                                             {text: 'lang.all', value: 'all', selected: true},
-                                            {text: 'lang.paid', value: 'paid'},
-                                            {text: 'lang.due', value: 'due'},
+                                            {text: 'lang.order_status_pending', value: 'pending'},
+                                            {text: 'lang.order_status_processing', value: 'processing'},
+                                            {text: 'lang.order_status_ready', value: 'ready'},
+                                            {text: 'lang.order_status_pickedup', value: 'pickedup'},
+                                            {text: 'lang.order_status_cancelled', value: 'cancelled'},
                                         ]
                                     }
                                 ]
@@ -295,6 +371,12 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
             emitForIsActiveEdit(value) {
                 this.isDateEditActive = value;
             },
+            emitForGeneratePackingSlip(value) {
+                this.isGeneratePackingSlip = value;
+            },
+            emitForChangeOrderStatus(value) {
+                this.isChangeOrderStatus = value;
+            },
             getActiveAttributeModal(isActive) {
                 this.isActiveAttributeModal = isActive;
             },
@@ -312,7 +394,7 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 this.isDisabled = false;
             },
             confirmationModalButtonAction() {
-                this.deleteDataMethod('/sales/list/delete/' + this.deleteID, this.deleteIndex);
+                this.deleteDataMethod('/orders/sales/list/delete/' + this.deleteID, this.deleteIndex);
             },
             printData(value) {
                 this.barcodeData = value;

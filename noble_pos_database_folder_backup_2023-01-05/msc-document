@@ -1,0 +1,40 @@
+prod query
+
+ALTER TABLE `orion_pos`.`products` 
+DROP COLUMN `status`,
+DROP COLUMN `product_image`,
+DROP COLUMN `make`,
+DROP COLUMN `product_sku`;
+
+
+CREATE TABLE `orion_pos`.`variants` (
+  `variant_id` INT NOT NULL AUTO_INCREMENT,
+  `variant` VARCHAR(200) NOT NULL,
+  PRIMARY KEY (`variant_id`));
+
+
+CREATE TABLE `orion_pos`.`variant_values` (
+  `variant_value_id` INT NOT NULL AUTO_INCREMENT,
+  `variant_id` INT(11) UNSIGNED NULL,
+  `variant_value` VARCHAR(200) NOT NULL,
+  PRIMARY KEY (`variant_value_id`));
+
+
+CREATE TABLE `orion_pos`.`product_variants` (
+  `product_variants_id` INT NOT NULL AUTO_INCREMENT,
+  `product_id` INT(11) UNSIGNED NULL,
+  `product_variant_name` VARCHAR(200) NOT NULL,
+  `sku` VARCHAR(205) NOT NULL,
+  `price` FLOAT NULL,
+  PRIMARY KEY (`product_variants_id`));
+  
+  CREATE TABLE `orion_pos`.`product_details` (
+  `product_detail_id` INT NOT NULL AUTO_INCREMENT,
+  `product_variants_id` INT(11) UNSIGNED NULL,
+  `value_id` INT(11) UNSIGNED NULL,
+  PRIMARY KEY (`product_detail_id`));
+
+
+
+
+category_status

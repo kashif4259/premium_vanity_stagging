@@ -584,6 +584,10 @@ class SalesController extends Controller
             $orderData['profit'] = $profit;
             $orderData['status'] = $orderStatus;
             $orderData['table_id'] = $restaurantTableId;
+            $orderData['delivery_or_pickup'] = $request->deliveryOrPickup;
+            $orderData['delivery_or_pickup_date'] = $request->deliveryOrPickupDate;
+            $orderData['delivery_charges'] = $request->deliveryCharges;
+            $orderData['order_status'] = 'pending';
 
             if ($orderData['total'] >= 0 || $salesOrReceivingType == "internal-transfer") {
                 $orderData['order_type'] = $orderType;
@@ -634,10 +638,7 @@ class SalesController extends Controller
 
             $orderData['created_by'] = $createdBy;
             $orderData['branch_id'] = $userBranchId;
-            if(isset($request->salesProductVariations) && !empty($request->salesProductVariations))
-            {
-                $orderData['product_custom_details'] = json_encode($request->salesProductVariations, true);
-            }
+            
             $orderData['created_at'] = Carbon::parse($time);
 
             if ($orderData['table_id']) {
@@ -693,6 +694,10 @@ class SalesController extends Controller
             $orders['status'] = $orderStatus;
             $orders['table_id'] = $restaurantTableId;
             $orders['due_amount'] = $dueAmount;
+            $orders['delivery_or_pickup'] = $request->deliveryOrPickup;
+            $orders['delivery_or_pickup_date'] = $request->deliveryOrPickupDate;
+            $orders['delivery_charges'] = $request->deliveryCharges;
+            $orderData['order_status'] = 'pending';
 
             if ($orders['total'] < 0) {
                 $getReturnProduct = Order::getReturnProduct($carts[0]['invoiceReturnId'], $orderType);
@@ -744,6 +749,17 @@ class SalesController extends Controller
                 $cart['discount'] = 0;
             }
 
+            if(isset($cart['product_variations']) && !empty($cart['product_variations']))
+            {
+                $product_custom_details = json_encode($cart['product_variations'], true);
+            }
+            else
+            {
+                $product_custom_details = '';
+            }
+
+            // return $cart['product_variations'];
+
             array_push($orderItems, [
                 'product_id' => $cart['productID'],
                 'variant_id' => $cart['variantID'],
@@ -756,7 +772,8 @@ class SalesController extends Controller
                 'order_id' => $orderID,
                 'note' => $cart['cartItemNote'],
                 'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
+                'updated_at' => date('Y-m-d H:i:s'),
+                'product_custom_details' => (!empty($product_custom_details) ? $product_custom_details : null)
             ]);
 
             // for update isNotify product_variant

@@ -10,7 +10,43 @@
                 </ol>
             </nav>
             <div class="main-layout-card">
-               
+                <div v-if="!hidePreLoader" class="productsLayout">
+                    <pre-loader class="modal-layout-content"></pre-loader>
+                </div>
+
+                <div v-else class="productsLayout">
+                    <h4 class="text-center">Order #: {{ order.invoice_id }}</h4>
+                    <hr>
+                    <div class="row">
+                        <div class="pxs-0 col-12 col-sm-12 col-md-4 col-lg-4 col-xl-4">
+                            <img class="img-thumbnail" :src="publicPath+'/uploads/products/' + order.imageURL">
+                        </div>
+                        <div class="pxs-0 offset-md-1 col-xs-12 col-sm-12 col-md-7 col-lg-7 col-xl-7">
+                            <table class="table mb-0 product-detail-table">
+                                <tr v-if="order.cat_name !== null">
+                                    <th>{{ trans('lang.category') }}</th>
+                                    <td>{{order.cat_name}}</td>
+                                </tr>
+                                <tr v-if="order.brand_name !== null">
+                                    <th>{{ trans('lang.brand') }}</th>
+                                    <td>{{order.brand_name}}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ trans('lang.description') }}</th>
+                                    <td>{{order.product_des}}</td>
+                                </tr>
+                                <tr>
+                                    <th>{{ trans('lang.created_by') }}</th>
+                                    <td>{{order.created_by}}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="variantData" v-if="order.product_variations !== null">
+                        <datatable-component class="main-layout-card-content"
+                                             :options="tableOptions"></datatable-component>
+                    </div>
+                </div>
                 
             </div>
         </div>
@@ -25,66 +61,46 @@
         props: ['id','tab_name', 'route_name'],
         data() {
             return {
-                // hidePreLoader: true,
-                // price: '',
-                // purchase_price: '',
-                // selling_price: '',
-                // products: {},
-                // tableOptions: {
-                //     tableName: 'products',
-                //     columns: [
-                //         {
-                //             title: 'lang.item_image',
-                //             key: 'image',
-                //             type: 'images',
-                //             source: '/uploads/products',
-                //             imagefield: 'imageURL',
-                //             sortable: false
-                //         },
-                //         {title: 'lang.variant_title', key: 'variant_title', type: 'text', sortable: true},
-                //         {title: 'lang.attribute_values', key: 'attribute_values', type: 'text', sortable: false},
-                //         {title: 'lang.selling_price', key: 'selling_price', type: 'text', sortable: true},
-                //         {title: 'lang.receiving_price', key: 'purchase_price', type: 'text', sortable: true},
-                //     ],
-                //     formatting : ['selling_price','purchase_price'],
-                //     source: '/products/variantDetails/' + this.id,
-                // },
+                hidePreLoader: true,
+                order: {},
+                tableOptions: {
+                    tableName: 'orders',
+                    columns: [
+                        
+                        {title: 'lang.vanity_hole', key: 'hole', type: 'text', sortable: true},
+                        {title: 'lang.vanity_filler', key: 'filler', type: 'text', sortable: false},
+                        {title: 'lang.vanity_handles', key: 'handles', type: 'text', sortable: true},
+                        {title: 'lang.vanity_drawers', key: 'drawersSide', type: 'text', sortable: true},
+                        {title: 'lang.vanity_color', key: 'color', type: 'text', sortable: true},
+                        {title: 'lang.vanity_size', key: 'size', type: 'text', sortable: true},
+                    ],
+                    source: '/orders/variantDetails/' + this.id,
+                },
             }
         },
 
         created() {
-            // this.getProductDetails('/products/getDetails/' + this.id);
+            this.getOrderDetails('/orders/getDetails/' + this.id);
         },
         mounted(){
             this.tabName = this.tab_name;
             this.routeName = this.route_name;
         },
         methods: {
-                // getProductDetails(route) {
-                //     let instance = this;
-                //     instance.hidePreLoader = false;
-                //     instance.axiosGet(route,
-                //         function (response) {
-                //             instance.products = response.data.productDetails;
-                //             if (instance.products.taxable === 0) {
-                //                 instance.products.taxable = instance.trans('lang.no_tax');
-                //             }
-                //             else {
-                //                 instance.products.taxable = instance.products.tax_type;
-                //             }
-                //             let productType = response.data.productDetails.product_type;
-                //             if (productType === 'standard') {
-                //                 instance.price = response.data.variant.price;
-                //                 instance.purchase_price = response.data.variant.purchase_price;
-                //                 instance.selling_price = response.data.variant.selling_price;
-                //             }
-                //             instance.hidePreLoader = true;
-                //         },
-                //         function (response) {
+            getOrderDetails(route) {
+                    let instance = this;
+                    instance.hidePreLoader = false;
+                    instance.axiosGet(route,
+                        function (response) {
+                            instance.order = response.data.orderDetails;
+                            console.log(response.data.orderDetails);
+                            instance.hidePreLoader = true;
+                        },
+                        function (response) {
 
-                //         },
-                //     );
-                // },
+                        },
+                    );
+                },
                 goBack(){
                     let instance = this;
                     instance.redirect(`/${this.routeName}`);

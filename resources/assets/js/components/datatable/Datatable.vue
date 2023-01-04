@@ -69,8 +69,9 @@
                                 </th>
                                 </thead>
                                 <tbody v-if="datasets.length > 0">
-                                <tr v-for="(data, index) in datasets">
-                                    <!-- {{ data.payment_status }} -->
+                                <tr v-for="(data, index) in datasets" 
+                                :style="[data.order_status == 'Ready' ? {'background-color': '#5cb85c'} : data.order_status == 'Processing' ? {'background-color': '#5bc0de'} : data.order_status == 'Pending' ? {'background-color':'#f0ad4e'} : data.order_status == 'Pickedup' ? {'background-color':'green'} : data.order_status == 'Cancelled' ? {'background-color':'#d9534f'} : data.order_status == 'Hold' ? {'background-color':'yellow'} : '' ]">
+                                    <!-- {{ data.order_status }} -->
                                     <td v-if="options.checkbox">
                                         <input type="checkbox" v-model="data.isChecked"
                                                @click="updateChecked(data, index)">
@@ -78,7 +79,8 @@
                                     </td>
                                     <td :data-label="trans(column.title)" v-for="column in options.columns"
                                         :class="((index+2 === datasets.length || index+1 === datasets.length) && options.summary) ? {'font-weight-bold':options.summary, 'border-bottom-0':index+1 === datasets.length, 'text-right':includes(options.right_align, column.key) } : {'text-right':includes(options.right_align, column.key) || column.type === 'component' , 'table-col-truncate': column.type === 'text' && column.key === 'description'}"
-                                        :style="[data.payment_status == 'Due'  && column.key == 'payment_status' ? {'background': 'red'} : data.payment_status == 'Paid' && column.key == 'payment_status' ? {'background': 'green'} : {'background': 'white'}  ]">
+                                        :style="[data.payment_status == 'Due'  && column.key == 'payment_status' ? {'background': 'red'} : data.payment_status == 'Paid' && column.key == 'payment_status' ? {'background': 'green'} : ''  ]"
+                                        >
                                     
                                     <span
                                         v-if="options.summary && (index+2 === datasets.length || index+1 === datasets.length)">

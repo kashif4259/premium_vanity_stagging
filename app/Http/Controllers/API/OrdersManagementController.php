@@ -15,9 +15,9 @@ use App\Models\CashRegisterLog;
 use App\Models\CustomerGroup;
 use App\Models\EmailTemplate;
 use App\Models\InvoiceTemplate;
-use App\Models\Order;
 use App\Models\Setting;
 use App\Models\OrderItems;
+use App\Models\Order;
 use App\Models\Payments;
 use App\Models\Product;
 use App\Models\ProductAttribute;
@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Storage;
 use PDF;
 use Config;
+use Database\Seeders\OrderTableSeeder;
 use Milon\Barcode\DNS1D;
 
 class OrdersManagementController extends Controller
@@ -1518,12 +1519,25 @@ class OrdersManagementController extends Controller
                 $rowData->payment_status = Lang::get('lang.paid');
             }
             if ($rowData->customer == '') $rowData->customer = Lang::get('lang.walk_in_customer');
+            $rowData->order_status = ucfirst($rowData->order_status);
             $netTax += $rowData->tax;
             $netTotal += $rowData->total;
             $netItem += $rowData->item_purchased;
             $netDiscount += $rowData->discount;
             $netDueAmount += $rowData->due_amount;
             $arrayCount++;
+            $rowData->is_delivery_or_pickup = ucfirst($rowData->delivery_or_pickup);
+            $rowData->delivery_date = '';
+            $rowData->pickup_date = '';
+            if(isset($rowData->delivery_or_pickup) && $rowData->delivery_or_pickup == 'delivery')
+            {
+                $rowData->delivery_date = (isset($rowData->delivery_or_pickup_date) ? $rowData->delivery_or_pickup_date : '');
+            }
+
+            if(isset($rowData->delivery_or_pickup) && $rowData->delivery_or_pickup == 'pickup')
+            {
+                $rowData->pickup_date = (isset($rowData->delivery_or_pickup_date) ? $rowData->delivery_or_pickup_date : '');
+            }
         }
 
         return [
@@ -1565,5 +1579,93 @@ class OrdersManagementController extends Controller
         }
 
         return $orderIdInternalTransfer;
+    }
+
+    public function getOrderDetails($id)
+    {
+        $orderDetails = OrderItems::detailsById($id);
+        
+        if(isset($orderDetails->product_custom_details) && !empty($orderDetails->product_custom_details))
+        {          
+            $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
+        }
+
+        if ($orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
+
+        if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+
+        return ['orderDetails' => $orderDetails];
+        
+    }
+
+    public function getVariantDetails($id)
+    {
+        $orderDetails = OrderItems::variantById($id);
+        
+        if(isset($orderDetails->product_variations) && !empty($orderDetails->product_variations))
+        {          
+            $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+        }
+
+        return ['datarows' => [
+            $orderDetails->product_variations
+        ]];
+    }
+
+    public function getPackingSlipDetails($id)
+    {
+        $orderItmes = OrderItems::getOrderItmesById($id);
+        
+        foreach($orderItmes as &$orderDetails)
+        {
+            if(isset($orderDetails->product_custom_details) && !empty($orderDetails->product_custom_details))
+            {          
+                $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
+            }
+    
+            // if ($orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
+    
+            if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+
+            $no_item_purchases = OrderItems::getItemDiscountAndItemPurchased($orderDetails->id);
+
+            $orderDetails->discount = $no_item_purchases->discount;
+
+            $orderDetails->item_purchased = $no_item_purchases->item_purchased;
+        }
+        
+        $returndata = [
+            'order_items' => $orderItmes,
+            'header_info' => Order::getPackingSlipHeaderInfo($id)
+        ];
+
+        return $returndata;
+    }
+
+    public function updateOrderStatus(Request $request, $id)
+    {
+        $getOrderDetailsById = Order::getOne($id);
+        
+        if( ($getOrderDetailsById->order_status == 'pending' || $getOrderDetailsById->order_status == 'hold') && $request->order_status == 'Processing')
+        {
+            $getOrderDetailsById->order_status = 'processing';
+
+            $getOrderDetailsById->update();
+        }
+
+        if($getOrderDetailsById->order_status == 'processing' && $request->order_status == 'Ready')
+        {
+            $getOrderDetailsById->order_status = 'ready';
+
+            $getOrderDetailsById->update();
+        }
+        if($getOrderDetailsById->order_status == 'ready' && $request->order_status == 'Pickedup')
+        {
+            $getOrderDetailsById->order_status = 'pickedup';
+
+            $getOrderDetailsById->update();
+        }
+
+        return $getOrderDetailsById->refresh();
     }
 }

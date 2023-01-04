@@ -11,7 +11,7 @@ class OrderItems extends BaseModel
 {
     use OrderItemRelationship;
 
-    protected $fillable = ['product_id', 'variant_id', 'quantity', 'price', 'discount', 'tax_id', 'order_id', 'adjust_stock_type_id', 'type', 'sub_total'];
+    protected $fillable = ['product_id', 'variant_id', 'quantity', 'price', 'discount', 'tax_id', 'order_id', 'adjust_stock_type_id', 'type', 'sub_total', 'product_custom_details'];
 
     protected $casts = [
         'discount' => 'float',
@@ -637,6 +637,8 @@ class OrderItems extends BaseModel
                 'orders.due_amount',
                 'orders.product_custom_details',
                 'orders.order_status',
+                'orders.delivery_or_pickup',
+                'orders.delivery_or_pickup_date',
                 DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by"),
                 DB::raw("users.id as user_id"),
                 DB::raw("CONCAT(customers.first_name,' ',customers.last_name)  AS customer"),
@@ -646,7 +648,7 @@ class OrderItems extends BaseModel
                 DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased')
             )
             ->where('orders.order_type', '=', 'sales')
-            ->where('orders.status', '=', 'done')
+            ->whereIn('orders.status', ['done','delete'])
             ->where('orders.branch_id', '=', $id)
             ->groupBy('order_items.order_id');
 
@@ -660,6 +662,9 @@ class OrderItems extends BaseModel
                     } elseif ($singleFilter['value'] == 'due') {
                         $query->where('orders.due_amount', '>', 0);
                     }
+                } else if (array_key_exists('key', $singleFilter) && $singleFilter['key'] == "order_status" && $singleFilter['value'] != "all") {
+                    \Log::Info("filters array ". print_r($filtersData, true));
+                    $query->where('orders.order_status', '=', $singleFilter['value']);
                 }
             }
         }
@@ -677,5 +682,112 @@ class OrderItems extends BaseModel
         } else {
             return $query->orderBy($columnName, $columnSortedBy)->get();
         }
+    }
+
+    public static function detailsById($id)
+    {
+        $query = OrderItems::query()->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('products', 'products.id', '=', 'order_items.product_id')
+            ->join('users', 'users.id', '=', 'orders.created_by')
+            ->leftJoin('taxes', 'taxes.id', '=', 'order_items.tax_id')
+            ->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+            ->leftJoin('branches', 'branches.id', 'orders.transfer_branch_id')
+            ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
+            ->leftJoin('product_brands', 'product_brands.id', '=', 'products.brand_id')
+            ->select(
+                'orders.id',
+                'branches.name as transfer_branch_name',
+                'orders.date',
+                'orders.type',
+                'orders.sub_total',
+                'orders.total_tax as tax',
+                'orders.total',
+                'orders.invoice_id',
+                'orders.due_amount',
+                'orders.product_custom_details as product_variations',
+                'orders.order_status',
+                'products.imageURL',
+                'products.title',
+                'product_categories.name as cat_name',
+                'product_brands.name as brand_name',
+                'products.description as product_des',
+                DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by"),
+                DB::raw("users.id as user_id"),
+                DB::raw("CONCAT(customers.first_name,' ',customers.last_name)  AS customer"),
+                DB::raw("customers.id as customer_id"),
+                DB::raw("((sum(((abs(order_items.quantity)*order_items.price)* order_items.discount)/100))+ 
+                (select abs(order_items.sub_total) from order_items where order_items.type ='discount' and order_items.order_id = orders.id)) AS discount"),
+                DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased')
+            )
+            ->where('orders.order_type', '=', 'sales')
+            ->where('orders.status', '=', 'done')
+            ->where('orders.id', '=', $id)
+            ->groupBy('order_items.order_id')->first();
+
+        return $query;
+    }
+
+    public static function variantById($id)
+    {
+        return  OrderItems::query()->join('orders', 'orders.id', '=', 'order_items.order_id')
+        ->select(
+            'orders.product_custom_details as product_variations'
+        )
+        ->where('orders.order_type', '=', 'sales')
+        ->where('orders.status', '=', 'done')
+        ->where('orders.id', '=', $id)->first();
+    }
+
+    public static function getOrderItmesById($order_id)
+    {
+        $query = OrderItems::query()->join('orders', 'orders.id', '=', 'order_items.order_id')
+        ->join('products', 'products.id', '=', 'order_items.product_id')
+        // ->join('users', 'users.id', '=', 'orders.created_by')
+        // ->leftJoin('taxes', 'taxes.id', '=', 'order_items.tax_id')
+        // ->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+        // ->leftJoin('branches', 'branches.id', 'orders.transfer_branch_id')
+        // ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
+        // ->leftJoin('product_brands', 'product_brands.id', '=', 'products.brand_id')
+        ->select(
+            'order_items.id',
+            // 'branches.name as transfer_branch_name',
+             DB::raw('DATE_FORMAT(orders.date,"%m/%d/%Y") AS date '),
+            // 'orders.type',
+            // 'orders.sub_total',
+            // 'orders.total_tax as tax',
+            // 'orders.total',
+            // 'orders.invoice_id',
+            // 'orders.due_amount',
+            'order_items.product_custom_details as product_variations',
+            'orders.order_status',
+            // 'products.imageURL',
+            'products.title',
+            // 'product_categories.name as cat_name',
+            // 'product_brands.name as brand_name',
+            'products.description as product_des',
+            // 'order_items.type',
+            // DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by"),
+            // DB::raw("users.id as user_id"),
+            // DB::raw("CONCAT(customers.first_name,' ',customers.last_name)  AS customer"),
+            // DB::raw("customers.id as customer_id")
+            // DB::raw("((sum(((abs(order_items.quantity)*order_items.price)* order_items.discount)/100))+ 
+            // (select abs(order_items.sub_total) from order_items where order_items.type ='discount' and order_items.order_id = orders.id)) AS discount")
+            // DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased')
+        )
+        ->where('orders.order_type', '=', 'sales')
+        ->where('orders.status', '=', 'done')
+        ->where('order_items.order_id', '=', $order_id)->get();
+
+        return $query;
+    }
+
+    public static function getItemDiscountAndItemPurchased($order_id)
+    {
+        return OrderItems::query()->join('orders', 'orders.id', '=', 'order_items.order_id')->select(
+            // DB::raw("((sum(((abs(order_items.quantity)*order_items.price)* order_items.discount)/100))+ 
+            // (select abs(order_items.sub_total) from order_items where order_items.type ='discount' and order_items.order_id = orders.id)) AS discount"),
+            DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased')
+        )->where('order_items.id', '=', $order_id)
+        ->first();
     }
 }

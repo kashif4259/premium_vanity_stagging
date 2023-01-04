@@ -261,6 +261,46 @@
                 </div>
 
             </div>
+
+            <div class="form-row mx-0 mb-3 bg-white rounded p-3">
+                <div class="col-md-12 mb-3">
+                    <h5 class="mb-0">{{ trans('lang.is_customization') }}</h5>
+                </div>
+                <div class="col-md-12">
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input
+                                type="radio"
+                                name="isCustomization"
+                                class="custom-control-input"
+                                id="customization-yes"
+                                value="1"
+                                v-model="isCustomization"
+
+                        />
+                        <label class="custom-control-label" for="customization-yes">
+                            {{ trans('lang.yes')
+                            }}
+                        </label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input
+                                type="radio"
+                                name="isCustomization"
+                                class="custom-control-input"
+                                id="customization-no"
+                                checked="checked"
+                                value="0"
+                                v-model="isCustomization"
+                        />
+                        <label class="custom-control-label" for="customization-no">
+                            {{ trans('lang.no')
+                            }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+
             <div v-if="!checkVariant" class="form-row mx-0 mb-3 bg-white rounded p-3">
                 <div class="form-group col-md-4" v-if="hideCommonInput">
                     <label>{{ trans('lang.purchase_price_label') }}</label>
@@ -705,7 +745,7 @@ export default {
             initialQuantity:2,
             isTitleDuplicate : false,
             isButtonDisable : false,
-
+            isCustomization: 0
         };
     },
     watch: {
@@ -1310,7 +1350,8 @@ export default {
                                 enabled: instance.productEnabled,
                                 variantDetails: instance.productVariant,
                                 image: instance.product.image,
-                                chipValues: instance.chipArray
+                                chipValues: instance.chipArray,
+                                is_customization:instance.isCustomization
                             });
                         }
                     }

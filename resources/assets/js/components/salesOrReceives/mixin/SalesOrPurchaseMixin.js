@@ -988,6 +988,7 @@ export default {
         },
 
         addProductToCart(product, productVariantID) {
+            
             let flag = 0, instance = this;
 
             instance.activeProductId = product.productID;
@@ -1023,7 +1024,7 @@ export default {
                         let alertMessage = product.title + ' ' + variantTitle + ' ' + instance.trans('lang.is_out_of_stock');
                         this.showWarningAlert(alertMessage);
                     }
-                    this.cart.push({
+                    let cartObjc = {
                         productID: product.productID,
                         productTitle: product.title,
                         taxID: product.tax_id,
@@ -1039,8 +1040,28 @@ export default {
                         calculatedPrice: insertCheckedVariant[0].price,
                         cartItemNote: '',
                         showItemCollapse: false,
-                        availbleQuantity: insertCheckedVariant[0].availableQuantity
-                    });
+                        availbleQuantity: insertCheckedVariant[0].availableQuantity,
+                        categoryID: product.category_id,
+                        isCustomization: product.is_customization,
+                        orderTypeForDeliveryCharges:''
+                    };
+
+                    if(product.is_customization != '')
+                    {
+                        cartObjc.product_variations = {
+                                hole:"",
+                                filler:"",
+                                handles:"",
+                                drawer_side:"",
+                                wall_side:"",
+                                color:"",
+                                size:""
+                            }
+                    }
+
+                    this.cart.push(cartObjc);
+
+                    
                 }
             }
             this.setCartItemsToCookieOrDB(1);
@@ -2163,18 +2184,23 @@ export default {
             this.loadMoreBtnOffset += parseInt(this.productRowLimit);
             this.getProductData();
         },
-        addShipmentInfo(value, bool) {
-            this.cart.forEach(function (element, index, shippingArray) {
-                if (element.orderType === 'shipment') {
-                    shippingArray.splice(index, 1);
-                }
-            });
-            if (bool) {
+        addShipmentInfo(value, bool, type) {
+            if(type == 'delivery'){
                 this.cart.push(value);
+            }else{
+                this.cart.forEach(function (element, index, shippingArray) {
+                    if (element.orderType === 'shipment') {
+                        shippingArray.splice(index, 1);
+                    }
+                });
+                if (bool) {
+                    this.cart.push(value);
+                }
+                this.addShipping = bool;
+                this.setCartItemsToCookieOrDB(1);
+                this.makeFinalCart('done');
             }
-            this.addShipping = bool;
-            this.setCartItemsToCookieOrDB(1);
-            this.makeFinalCart('done');
         }
+        
     }
 }

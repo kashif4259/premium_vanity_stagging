@@ -261,74 +261,70 @@
                                 </div>
                             </div>
 
-                            <div class="form-group row ml-0">
+                            <div v-if="orderType === 'sales'" class="form-group row ml-0">
                                 <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label">
-                                    Hole
+                                    {{ trans('lang.delivery_or_pickup') }}
                                 </label>
                                 <div class="col-4 col-sm-6 col-md-7 col-lg-8 col-xl-8 pl-0">
-                                    <input type="text" class="form-control"
-                                        v-model="salesProductVariations.hole"
-                                     />
+                                    <select     v-validate="'required'"
+                                                data-vv-as="delivery or pickup"
+                                                id="deliveryOrPickup"
+                                                name="deliveryOrPickup"
+                                                class="form-control"
+                                                v-model="deliveryOrPickup"
+                                                @change="addDeliveryStatus(deliveryOrPickup)"
+                                                >
+                                            <option value="" disabled selected>{{ trans('lang.choose_one') }}</option>
+                                            <option value="delivery">Delivery</option>
+                                            <option value="pickup">Pickup</option>
+                                        </select>
+                                        <div class="heightError">
+                                            <small class="text-danger" v-show="errors.has('deliveryOrPickup')">
+                                                {{ errors.first('deliveryOrPickup') }}
+                                            </small>
+                                        </div>
                                 </div>
                             </div>
 
-                            <div class="form-group row ml-0">
+                            <div v-if="orderType === 'sales' && deliveryOrPickup == 'delivery' " class="form-group row ml-0">
                                 <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label">
-                                    FILLER
+                                    {{ trans('lang.delivery_charges') }}
                                 </label>
                                 <div class="col-4 col-sm-6 col-md-7 col-lg-8 col-xl-8 pl-0">
-                                    <input type="text" class="form-control"
-                                        v-model="salesProductVariations.filler"
-                                     />
+                                    <input v-validate="'required'"
+                                               name="deliveryCharges"
+                                               type="text"
+                                               class="form-control"
+                                               v-model="deliveryCharges"/>
+                                    <div class="heightError">
+                                        <small class="text-danger" v-show="errors.has('deliveryCharges')">
+                                            {{ errors.first('deliveryCharges') }}
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="form-group row ml-0">
+                            <div v-if="orderType === 'sales'" class="form-group row ml-0">
                                 <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label">
-                                    HANDLES
+                                    {{ trans('lang.delivery_or_pickup_date') }}
                                 </label>
                                 <div class="col-4 col-sm-6 col-md-7 col-lg-8 col-xl-8 pl-0">
-                                    <input type="text" class="form-control" 
-                                        v-model="salesProductVariations.handles"
-                                    />
+                                    <input 
+                                            v-validate="'required'"
+                                            data-vv-as="delivery or pickup date"
+                                            type="date" 
+                                            id="deliveryOrPickupDate" 
+                                            name="deliveryOrPickupDate"
+                                            v-model="deliveryOrPickupDate"
+                                             />
+                                    <div class="heightError">
+                                        <small class="text-danger" v-show="errors.has('deliveryOrPickupDate')">
+                                            {{ errors.first('deliveryOrPickupDate') }}
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="form-group row ml-0">
-                                <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label">
-                                    DRAWERS SIDE
-                                </label>
-                                <div class="col-4 col-sm-6 col-md-7 col-lg-8 col-xl-8 pl-0">
-                                    <input type="text" class="form-control"
-                                        v-model="salesProductVariations.drawersSide"
-                                    />
-                                </div>
-                            </div>
-
-                            <div class="form-group row ml-0">
-                                <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label">
-                                    Color
-                                </label>
-                                <div class="col-4 col-sm-6 col-md-7 col-lg-8 col-xl-8 pl-0">
-                                    <input type="text" class="form-control" 
-                                        v-model="salesProductVariations.color"
-                                    />
-                                </div>
-                            </div>
-
-                            <div class="form-group row ml-0">
-                                <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label">
-                                    Size
-                                </label>
-                                <div class="col-4 col-sm-6 col-md-7 col-lg-8 col-xl-8 pl-0">
-                                    <input type="text" class="form-control"
-                                        v-model="salesProductVariations.size"
-                                    />
-                                </div>
-                            </div>
-
                             
-
                             <div
                                 v-if='parseInt(is_shipment_enable) === 1 && orderType ==="sales" && salesOrReceivingType === "customer" && salesOrReturnType==="sales" && is_connected'
                                 class="form-group row ml-0">
