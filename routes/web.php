@@ -19,7 +19,7 @@ Route::group(['middleware' => ['auth']], function () {
     require_once(__DIR__ . '/report/reportRoutes.php');
     require_once(__DIR__ . '/report/exportAllReport.php');
     require_once(__DIR__ . '/setting/setting.php');
-    require_once(__DIR__ . '/todo/todo.php');
+    require_once(__DIR__ . '/todos/todos.php');
     require_once(__DIR__ . '/orders/orders_management.php');
 
     //logout

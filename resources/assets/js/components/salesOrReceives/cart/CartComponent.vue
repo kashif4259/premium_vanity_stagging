@@ -174,6 +174,7 @@
             </span>
             <div v-else class="cart-item-container py-1" v-for="(cartItem,index) in cart"
                  :class="{'active-cart-item': cartItem.showItemCollapse }">
+                 <template v-if="cartItem.orderType != 'delivery'">
                 <div class="form-row mx-0 px-1 cart-item">
                     <div class="col-6 p-0 cart-item-btn"
                          @click.prevent="cartItemCollapse(index,cartItem.variantID)">
@@ -276,7 +277,7 @@
                         </textarea>
                     </div>
 
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
                         <label :for="'cart-item-vanity-hole'+index" class="label-in-cart ">
                             {{ trans('lang.vanity_hole') }}</label>
                             <input type="text"
@@ -306,13 +307,13 @@
                             <input type="text"
                                    class="form-control" v-model="cartItem.product_variations.wall_side">
                     </div>
-                    <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization">
+                    <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization" style="display: none;">
                         <label :for="'cart-item-vanity-color'+index" class="label-in-cart ">
                             {{ trans('lang.vanity_color') }}</label>
                             <input type="text"
                                    class="form-control" v-model="cartItem.product_variations.color">
                     </div>
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
                         <label :for="'cart-item-vanity-size'+index" class="label-in-cart ">
                             {{ trans('lang.vanity_size') }}</label>
                             <input type="text"
@@ -320,6 +321,7 @@
                     </div>
 
                 </div>
+                </template>
             </div>
         </div>
 
@@ -334,6 +336,20 @@
             </div>
             <div class="row mx-0 px-3 py-2  border-bottom" v-if="this.sales_or_receiving_type !== 'internal-transfer'">
                 <div class="col-6 p-0">
+                    Calculate {{ trans('lang.tax') }}
+                </div>
+                <div class="col-6 p-0 text-right">
+
+                    <select class="custom-select custom-tax-calculate" @change="updateTaxOnTotal()" v-model="custom_tax">
+                        <option value="0">0%</option>
+                        <option value="13">13%</option>
+                    </select>
+
+                    <!-- <input type="number" @keyup="updateTaxOnTotal(tax)" class="form-control" v-model="tax">  -->
+                </div>
+            </div>
+            <div class="row mx-0 px-3 py-2  border-bottom" v-if="this.sales_or_receiving_type !== 'internal-transfer'">
+                <div class="col-6 p-0">
                     {{ trans('lang.tax') }}
                 </div>
                 <div class="col-6 p-0 text-right">
@@ -341,7 +357,7 @@
                 </div>
             </div>
             <div class="row mx-0 px-3 py-2  border-bottom" id="pop_mouse1" v-popover:foo.right
-                 v-if="this.sales_or_receiving_type !== 'internal-transfer'">
+                 v-if="this.sales_or_receiving_type !== 'internal-transfer'" style="display:none;">
                 <div class="col-6 p-0">
                     {{ trans('lang.discount_all_items_by_percent') }} (%)
                     <popover name="foo">
@@ -365,7 +381,7 @@
                 </div>
             </div>
             <div class="row mx-0 px-3 py-2" id="pop_mouse2" v-popover:foo1.right
-                 v-if="sales_or_receiving_type !== 'internal-transfer'">
+                 v-if="sales_or_receiving_type !== 'internal-transfer'" style="display:none;">
                 <div class="col-6 p-0">
                     {{ trans('lang.discount_on_sub_total') }}
                 </div>
@@ -391,7 +407,7 @@
                 </div>
             </div>
 
-            <div class="row mx-0 px-3 py-2" id="pop_mouse2" v-popover:foo1.right
+            <!-- <div class="row mx-0 px-3 py-2" id="pop_mouse2" v-popover:foo1.right
                  v-if="sales_or_receiving_type !== 'internal-transfer'">
                 <div class="col-6 p-0">
                     Deilvery Charges
@@ -416,7 +432,7 @@
                         <i class="la la-edit discount-on-subtotal-popover"></i>{{ numberFormat(newOverAllDiscount) }}
                     </span>
                 </div>
-            </div>
+            </div> -->
 
             <div class="row mx-0 px-3 py-2"
                  v-if="sales_or_receiving_type !== 'internal-transfer' && adjustedDiscount">
@@ -436,9 +452,9 @@
                     </span>
                     <span
                         v-if="currentBranch !== null && salesOrReturnType!=='returns' && order_type === 'sales' && this.sales_or_receiving_type !== 'internal-transfer'">
-                        <span class="">( {{ trans('lang.tax') }}</span>
-                        <span v-if="parseInt(user.tax_excluded) === 0">{{ trans('lang.included') }})</span>
-                        <span v-else>{{ trans('lang.excluded') }} )</span>
+                        <span class="" style="display:none;">( {{ trans('lang.tax') }}</span>
+                        <span v-if="parseInt(user.tax_excluded) === 0" style="display:none;">{{ trans('lang.included') }})</span>
+                        <span v-else  style="display:none;">{{ trans('lang.excluded') }} )</span>
                     </span>
                 </div>
 
@@ -450,7 +466,7 @@
 
                 <div class="col-3 p-0 text-right">
                     <span
-                        v-if="currentBranch !== null && salesOrReturnType!=='returns' && order_type === 'sales' && sales_or_receiving_type !== 'internal-transfer'">
+                        v-if="currentBranch !== null && salesOrReturnType!=='returns' && order_type === 'sales' && sales_or_receiving_type !== 'internal-transfer' && 0">
                         <a class=""
                            data-toggle="modal"
                            data-target="#tax-edit-modal"
@@ -485,7 +501,7 @@
                 </div>
             </div>
             <!-- Place order button for restaurant -->
-            <div class="p-3 border-bottom"
+            <!-- <div class="p-3 border-bottom"
                  v-if="currentBranch !== null && currentBranch.branch_type === 'restaurant' && restaurantOrderType === 'dineIn' && (salesOrReceivingType !== 'internal' || salesOrReceivingType === 'internal-transfer') && salesOrReturnType !== 'returns' && order_type === 'sales' && isPlaceOrderActive">
                 <button class="btn pay-btn app-color"
                         href="#"
@@ -493,10 +509,10 @@
                         :disabled="enableDisablePay() || disabledPay() || !isConnected && parseInt(offline) === 0 || isHoldOrderDone === true">
                     {{ trans('lang.place_order') }}
                 </button>
-            </div>
+            </div> -->
 
             <!-- Pay button for restaurant -->
-            <div
+            <!-- <div
                 v-if="currentBranch !== null && currentBranch.branch_type === 'restaurant' && salesOrReceivingType === 'customer' && !isPlaceOrderActive"
                 class="p-3 border-bottom">
                 <button class="btn pay-btn app-color"
@@ -509,9 +525,9 @@
                         @shortkey="commonMethodForAccessingShortcut('payShortcut')">
                     {{ trans('lang.pay') }}
                 </button>
-            </div>
+            </div> -->
             <!-- End Template for Restaurant Module -->
-            <div class="p-3 border-bottom"
+            <!-- <div class="p-3 border-bottom"
                  v-if="salesOrReceivingType == 'internal' || salesOrReceivingType == 'internal-transfer'">
                 <button class="btn pay-btn app-color"
                         data-toggle="modal"
@@ -523,7 +539,7 @@
                         @shortkey="commonMethodForAccessingShortcut('payShortcut')">
                     {{ trans('lang.pay') }}
                 </button>
-            </div>
+            </div> -->
 
            <div
                v-if="(currentBranch !== null && currentBranch.branch_type !== 'restaurant' && salesOrReceivingType !== 'internal' && salesOrReceivingType !== 'internal-transfer') || (currentBranch !== null && currentBranch.branch_type === 'restaurant' && salesOrReceivingType != 'internal'  && (order_type === 'receiving' || salesOrReturnType =='returns'))"
@@ -536,11 +552,11 @@
                        :disabled="enableDisablePay() || disabledPay() || (!isConnected && offline == 0) || (!isConnected && order_type == 'receiving')"
                        v-shortkey="payment_short_key"
                        @shortkey="commonMethodForAccessingShortcut('payShortcut')">
-                   {{ trans('lang.pay') }}
+                   <!-- {{ trans('lang.pay') }} --> Save & Pay
                </button>
            </div>
 
-            <div v-if="order_type=='sales'" class="row mx-0">
+            <!-- <div v-if="order_type=='sales'" class="row mx-0">
 
                 <a v-if="salesOrReceivingType== 'internal' || salesOrReceivingType== 'internal-transfer'"
                    href="#"
@@ -591,8 +607,8 @@
                    @shortkey="commonMethodForAccessingShortcut('cancelCarditem')">
                     <i class="la la-times-circle la-2x p-2 text-danger"></i>
                 </a>
-            </div>
-            <div v-else class="row mx-0 receiveDeleteButton">
+            </div> -->
+            <!-- <div v-else class="row mx-0 receiveDeleteButton">
                 <a href="#"
                    data-toggle="modal"
                    data-target="#clear-cart-modal"
@@ -601,7 +617,7 @@
                    @click.prevent="">
                     <i class="la la-times-circle la-2x p-2 text-danger"></i>
                 </a>
-            </div>
+            </div> -->
         </div>
 
     </span>
@@ -780,7 +796,8 @@ export default {
             cancelCardItem: '',
             isDisableCartPlusBtn: false,
             deliveryCharges: 0,
-            productTotalWithoutDeliveryCharges: 0
+            productTotalWithoutDeliveryCharges: 0,
+            custom_tax:0
         }
     },
     watch: {
@@ -997,7 +1014,7 @@ export default {
         $('#cart-modal-for-mobile-view').on('shown.bs.modal', function (e) {
             instance.cartMinHeightSet();
         });
-        console.log(this.cart);
+        // console.log(this.cart);
     },
     methods: {
         checkDiscountType() {
@@ -1167,6 +1184,9 @@ export default {
         addOverAllDiscount(value, index, unformatted) {
             this.$emit('addOverAllDiscountFromCart', value, index, unformatted);
         },
+        updateTaxOnTotal() {
+            this.$emit('updateTaxOnTotalFromCart', this.custom_tax);
+        },
         cartItemButtonAction(cartProductID, cartVariantID, orderType, action) {
             let instance = this;
             instance.$emit('returnCartChange', true);
@@ -1276,10 +1296,20 @@ export default {
             currentStorage = ((data.length * 16) / (8 * 1024)).toFixed(2);
 
             if (this.checkBrowser() === "Chrome") {
-                window.webkitStorageInfo.queryUsageAndQuota(webkitStorageInfo.PERSISTENT, function (usage, total) {
+                // navigator.webkitPersistentStorage.requestQuota(webkitStorageInfo.PERSISTENT, function (usage, total) {
+                //     if (total != 0) instance.totalStorage = total;
+                //     instance.remainingStorage = instance.totalStorage - currentStorage;
+                // });
+
+
+                navigator.webkitPersistentStorage.queryUsageAndQuota ( 
+                    function (usage, total) {
                     if (total != 0) instance.totalStorage = total;
                     instance.remainingStorage = instance.totalStorage - currentStorage;
-                });
+                }
+                );
+
+
                 return instance.remainingStorage < instance.minimumSizeOfLocalStorage;
             } else {
                 instance.remainingStorage = instance.totalStorage - currentStorage;
@@ -1292,6 +1322,19 @@ export default {
         },
         cartSave(status = 'done') {
             this.makeFinalCart(status);
+            console.log("==============");
+            console.log(this.cart);
+            console.log(this.finalCart);
+            console.log("==============");
+            console.log(this.finalCart.customer);
+            console.log(this.order_type);
+            console.log(this.salesOrReceivingType);
+            if(this.isEmptyObj(this.finalCart.customer) && this.order_type === 'sales' && this.salesOrReceivingType === 'customer'){
+                this.showWarningAlert("Please select customer");
+                $('#cart-payment-modal').modal('hide');
+                this.isPaymentModalActive = false;
+                return false;
+            }
             if (status === 'done') {
                 this.isPaymentModalActive = true;
                 this.$emit('activeCartPaymentModal', this.finalCart);
@@ -1328,6 +1371,7 @@ export default {
                 transferBranchName: this.selectedSearchBranch.name,
                 date: moment().format('YYYY-MM-DD h:mm A'),
                 time: moment().format('YYYY-MM-DD h:mm A'),
+                taxPercentage: this.custom_tax
             };
         },
         setCartItemsToCookieOrDB(flag = 0) {

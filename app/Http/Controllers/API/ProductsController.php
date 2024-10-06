@@ -86,7 +86,7 @@ class ProductsController extends Controller
         $brand = $request->brand;
         $group = $request->group;
         $unit = $request->unit;
-        $taxID = $request->taxID;
+        $taxID = 'default-tax';
         $image = $request->image;
         $branch = $request->branch;
         $fileNameToStore = 'no_image.png';
@@ -321,6 +321,7 @@ class ProductsController extends Controller
         $data['unit_id'] = $request->unit;
         $data['product_type'] = $productType;
         $data['created_by'] = Auth::user()->id;
+        $data['is_customization'] = $request->is_customization;
         $variantDetails = $request->variantDetails;
 
         if ($request->taxID == 'no-tax') {
@@ -499,10 +500,9 @@ class ProductsController extends Controller
         $errorPreviewData = [];
 
         // Validate with correct column name
-        $isValid = $this->importFileValidation($request->importData, $request->requiredColumns);
+        $isValid = true;//$this->importFileValidation($request->importData, $request->requiredColumns);
 
         $defaultReorder = Setting::getSettingValue('re_order')->setting_value;
-
 
         if ($isValid == true) {
             foreach ($request->importData as $index => $product) {
@@ -514,16 +514,16 @@ class ProductsController extends Controller
                     'title' => $product['NAME'],
                     'category_id' => $product['CATEGORY'],
                     'brand_id' => $product['BRAND'],
-                    'group_id' => $product['GROUP'],
+                    'group_id' => 0,//$product['GROUP'],
                     'name' => $product['UNIT'],
-                    'short_name' => $product['UNIT_SHORT_NAME'],
+                    'short_name' => '',//$product['UNIT_SHORT_NAME'],
                     'product_type' => strtolower($product['PRODUCT_TYPE']),
-                    'variant_title' => $product['VARIANT_NAME'],
-                    'attribute_value' => $product['VARIANT_VALUE'],
-                    'variant_details' => $product['VARIANT_DETAIL'],
+                    'variant_title' => '',//$product['VARIANT_NAME'],
+                    'attribute_value' => '',//$product['VARIANT_VALUE'],
+                    'variant_details' => '',//$product['VARIANT_DETAIL'],
                     'sku' => $product['SKU'],
-                    'bar_code' => $product['BARCODE'],
-                    're_order' => $product['RE-ORDER'],
+                    'bar_code' => '',//$product['BARCODE'],
+                    're_order' => '',//$product['RE-ORDER'],
                     'purchase_price' => $product['PURCHASE-PRICE'],
                     'selling_price' => $product['SELLING-PRICE'],
                     'imageURL' => 'no_image.png',
@@ -550,6 +550,7 @@ class ProductsController extends Controller
                 }
             }
         }
+        
         if (sizeof($request->importData) == $row) {
 
             $response = [
@@ -630,6 +631,7 @@ class ProductsController extends Controller
         $skuPrefix = Setting::getSettingValue('sku_prefix')->setting_value;
 
         $count = ProductVariant::productAlreadyExisted($productData['sku'], $productData['bar_code'], $productData['title'], $productData['product_type']);
+        
         if ($count == 0 && !empty($productData['title'])) {
             $data = $this->insertProductAttributeForImport($productData);
             $variantData = array(
@@ -759,25 +761,33 @@ class ProductsController extends Controller
 
     private function insertProductAttributeForImport($data)
     {
-        $existedCategory = ProductCategory::getIdOfExisted('name', $data['category_id']);
-        if (isset($existedCategory)) $categoryId = $existedCategory->id;
-        else $categoryId = ProductCategory::getInsertedId(['name' => $data['category_id'], 'created_by' => $data['created_by']]);
-        $data['category_id'] = $categoryId;
-
-        $existedBrand = ProductBrand::getIdOfExisted('name', $data['brand_id']);
-        if (isset($existedBrand)) $brandId = $existedBrand->id;
-        else $brandId = ProductBrand::getInsertedId(['name' => $data['brand_id'], 'created_by' => $data['created_by']]);
-        $data['brand_id'] = $brandId;
-
-        $existedGroup = ProductGroup::getIdOfExisted('name', $data['group_id']);
-        if (isset($existedGroup)) $groupId = $existedGroup->id;
-        else $groupId = ProductGroup::getInsertedId(['name' => $data['group_id'], 'created_by' => $data['created_by']]);
-        $data['group_id'] = $groupId;
-
-        $existedUnit = ProductUnit::idOfExisted('*', ['name', 'short_name'], [$data['name'], $data['short_name']]);
-        if (isset($existedUnit)) $unitId = $existedUnit->id;
-        else $unitId = ProductUnit::getInsertedId(['name' => $data['name'], 'short_name' => $data['short_name'], 'created_by' => $data['created_by']]);
-        $data['unit_id'] = $unitId;
+        
+        if($data['category_id'] != '')
+        {
+            $existedCategory = ProductCategory::getIdOfExisted('name', $data['category_id']);
+            if (isset($existedCategory)) $categoryId = $existedCategory->id;
+            else $categoryId = ProductCategory::getInsertedId(['name' => $data['category_id'], 'created_by' => $data['created_by']]);
+            $data['category_id'] = $categoryId;
+        }
+        if($data['brand_id'] != '')
+        {
+            $existedBrand = ProductBrand::getIdOfExisted('name', $data['brand_id']);
+            if (isset($existedBrand)) $brandId = $existedBrand->id;
+            else $brandId = ProductBrand::getInsertedId(['name' => $data['brand_id'], 'created_by' => $data['created_by']]);
+            $data['brand_id'] = $brandId;
+        }
+        if($data['group_id'] != '')
+        {
+            $existedGroup = ProductGroup::getIdOfExisted('name', $data['group_id']);
+            if (isset($existedGroup)) $groupId = $existedGroup->id;
+            else $groupId = ProductGroup::getInsertedId(['name' => $data['group_id'], 'created_by' => $data['created_by']]);
+            $data['group_id'] = $groupId;
+        }
+        
+        // $existedUnit = ProductUnit::idOfExisted('*', ['name', 'short_name'], [$data['name'], $data['short_name']]);
+        // if (isset($existedUnit)) $unitId = $existedUnit->id;
+        // else $unitId = ProductUnit::getInsertedId(['name' => $data['name'], 'short_name' => $data['short_name'], 'created_by' => $data['created_by']]);
+        $data['unit_id'] = 0;
         $data['taxable'] = 0;
         $data['tax_type'] = 'custom';
         unset($data['variant_title'], $data['purchase_price'], $data['selling_price'], $data['attribute_value'], $data['variant_details'], $data['sku'], $data['bar_code'], $data['re_order'], $data['name'], $data['short_name']);

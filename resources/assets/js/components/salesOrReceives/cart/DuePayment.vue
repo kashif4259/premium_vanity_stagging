@@ -36,7 +36,8 @@
                                     :id="payment.id"
                                     v-if="payment.type != 'credit'"
                                     :value="payment.id">
-                                {{ payment.name}}
+                                <!-- {{ payment.name}} Credit\Debit -->
+                                Credit\Debit
                             </option>
                         </select>
                     </div>

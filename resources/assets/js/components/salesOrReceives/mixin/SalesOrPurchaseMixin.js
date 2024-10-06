@@ -1,5 +1,5 @@
 import {delayCall} from "../../../helper/delayCall";
-import {cartItemsToCookie, deleteCartItemsFromCookieOrDB, subTotalAmount} from "../helper/salesComponentCommonMethod";
+import {cartItemsToCookie, deleteCartItemsFromCookieOrDB, subTotalAmount, deleteLocalStorageItemsForDeliveryAndPickup, getDeliveryOrPickupDetails} from "../helper/salesComponentCommonMethod";
 import {concatProductArray, productConverter} from "../helper/productConverter";
 import {productRequestGenerator} from "../helper/helpers";
 
@@ -178,6 +178,8 @@ export default {
         invoice_size: '',
         adjustedDiscount: 0,
         originalSoldProductForReturn: {},
+        custom_tax: 0
+
     }),
     computed: {
         filteredHoldOrder() {
@@ -255,6 +257,8 @@ export default {
         }
     },
     created() {
+        deleteLocalStorageItemsForDeliveryAndPickup();
+        deleteCartItemsFromCookieOrDB(this.user, this.order_type, this.appVersion);
         this.setCartItemsToCookieOrDB();
         this.isTaxExcludedFromCart = this.user.tax_excluded !== "included";
 
@@ -440,6 +444,10 @@ export default {
         });
 
         $('#cart-payment-modal').on('hidden.bs.modal', function () {
+            // console.log(instance.finalCart.deliveryCharges);
+            // // localStorage.setItem('deliveryOrPickup', instance.finalCart.deliveryOrPickup);
+            // // localStorage.setItem('deliveryOrPickupDate', instance.finalCart.deliveryOrPickupDate);
+            // // localStorage.setItem('deliveryCharges', instance.finalCart.deliveryCharges);
             instance.isPaymentModalActive = false;
         });
 
@@ -625,6 +633,50 @@ export default {
             } else {
                 instance.cart = instance.cart.filter(element => element.orderType !== 'discount');
             }
+            instance.setCartItemsToCookieOrDB(1);
+        },
+        updateTaxOnTotal(value) {
+
+            // console.log("value ===>",value);
+            console.log("$data ===>",this.$data);
+            
+            if(value == 13)
+            {
+                this.tax = (value / 100) * this.total;
+            }
+            else
+            {
+                this.tax = 0.00;
+            }
+
+
+
+            let updatedTax = 0;
+            let total = 0;
+            this.cart.forEach(function (element) {
+                if(element.orderType != "delivery"){
+                    element.calculatedPrice = element.price * element.quantity;
+                    element.productTaxPercentage = value;
+                    updatedTax += (element.calculatedPrice * value) / 100;
+                    total += element.calculatedPrice;
+                }
+            });
+            this.grandTotal = Number((total + updatedTax).toFixed(2));
+            this.tax = updatedTax;
+
+
+            // // this.grandTotal = this.grandTotal - this.tax;
+
+            // if( value < 0 ){
+            //     value = value * -1;
+            // }
+            
+            // this.tax = value;
+            
+            // this.grandTotal = this.grandTotal + this.tax;
+
+            let instance = this;
+
             instance.setCartItemsToCookieOrDB(1);
         },
         productHeightSet() {
@@ -1098,14 +1150,21 @@ export default {
                 obj.discount = 0;
                 obj.overAllDiscount = 0;
                 obj.newDiscount = 0;
+                obj.newTax = 0;
             }else {
                 obj.discount = this.discount;
                 obj.overAllDiscount = this.overAllDiscount;
                 obj.newDiscount = this.newDiscount;
+                obj.newTax = this.tax;
             }
-
+            
             let cookieData = cartItemsToCookie(flag, obj, this.appVersion);
+            console.log("cookieData => ", cookieData);
+            console.log("total => ",this.total);
+            this.total = this.total + cookieData.newTax;
+            
 
+            console.log("this.grandTotal", this.grandTotal);
             this.setCookieDataToGlobal(cookieData);
 
             let subTotalAmountMethodData = subTotalAmount(
@@ -1121,7 +1180,9 @@ export default {
                 this.isTaxExcludedFromCart,
                 this.orders,
                 this.originalSoldProductForReturn,
+                cookieData.newTax
             );
+            console.log(subTotalAmountMethodData);
             this.setSubTotalDataToGlobal(subTotalAmountMethodData);
         },
         setCookieDataToGlobal(cookieData) {
@@ -1136,6 +1197,7 @@ export default {
             this.addShipping = cookieData.addShipping;
             this.selectedCustomer = cookieData.selectedCustomer;
             this.selectedSearchBranch = cookieData.selectedSearchBranch;
+            this.tax = cookieData.newTax;
         },
         setSubTotalDataToGlobal(data) {
             this.total = data.total;
@@ -2185,8 +2247,21 @@ export default {
             this.getProductData();
         },
         addShipmentInfo(value, bool, type) {
+            if(type == 'pickup') {
+                value = {};
+            }
+
+            this.cart = this.cart.filter(delivery => delivery.orderType != 'delivery');
+
             if(type == 'delivery'){
-                this.cart.push(value);
+                if(value) {
+                    
+                    this.cart.push(value);
+                    this.setCartItemsToCookieOrDB(1);
+                    this.makeFinalCart('done');
+                }
+            }else if(type == 'pickup') {
+                
             }else{
                 this.cart.forEach(function (element, index, shippingArray) {
                     if (element.orderType === 'shipment') {
@@ -2195,6 +2270,7 @@ export default {
                 });
                 if (bool) {
                     this.cart.push(value);
+                    
                 }
                 this.addShipping = bool;
                 this.setCartItemsToCookieOrDB(1);

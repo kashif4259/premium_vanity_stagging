@@ -1,3 +1,152 @@
+export const subTotalAmountForEdit = function (
+    discountOnSubtotal,
+    salesOrReturnType,
+    receiveOrReturnType,
+    total,
+    profit,
+    tax,
+    subTotal,
+    cart,
+    productTotalWithoutDiscount,
+    isTaxExcluded,
+    orders,
+    originalSoldProductForReturn,
+    newTax
+) {
+    // console.log(
+    //     discountOnSubtotal,
+    //     salesOrReturnType,
+    //     receiveOrReturnType,
+    //     total,
+    //     profit,
+    //     tax,
+    //     subTotal,
+    //     cart,
+    //     productTotalWithoutDiscount,
+    //     isTaxExcluded,
+    //     orders,
+    //     originalSoldProductForReturn,
+    //     newTax);
+
+    total = 0;
+    profit = 0;
+    tax = 0;
+    subTotal = 0;
+    let adjustedDiscount = 0, returnOrder = [];
+
+
+    //final subtraction for return product discount on subtotal calculation
+    if ((salesOrReturnType === 'returns' || receiveOrReturnType === 'returns')) {
+        returnOrder = _.last(originalSoldProductForReturn);
+    }
+
+    cart.forEach((cartItem) => {
+        // console.log(cartItem);
+        let calculatedPriceForSub = 0;
+        productTotalWithoutDiscount += cartItem.price;
+
+        if(cartItem.orderType !== 'delivery')
+        {
+            if (cartItem.quantity > 0) {
+    
+                cartItem.calculatedPrice = cartItem.price * cartItem.quantity;
+    
+                if (cartItem.orderType !== "discount" && cartItem.discount != undefined) {
+    
+                    calculatedPriceForSub = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
+    
+                } else if (cartItem.orderType !== "discount" && cartItem.discount == undefined) {
+    
+                    calculatedPriceForSub = cartItem.calculatedPrice;
+                }
+    
+    
+                if (cartItem.discount) {
+                    cartItem.calculatedPrice = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
+                }
+                
+                if(cartItem.calculatedPrice != undefined && cartItem.productTaxPercentage != undefined){
+                    tax += (cartItem.calculatedPrice * cartItem.productTaxPercentage) / 100;
+                }
+    
+            } else if (salesOrReturnType === 'returns' || receiveOrReturnType === 'returns') {
+    
+                console.log("else",salesOrReturnType, receiveOrReturnType)
+                cartItem.calculatedPrice = cartItem.price * cartItem.quantity;
+                cartItem.discount = cartItem.discount >= 0 ? cartItem.discount : 100;
+    
+                cartItem.calculatedPrice = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
+                tax += (cartItem.calculatedPrice * cartItem.productTaxPercentage) / 100;
+                calculatedPriceForSub = cartItem.calculatedPrice;
+            }
+    
+            total += cartItem.calculatedPrice;
+            subTotal += calculatedPriceForSub;
+    
+            if (cartItem.orderType !== 'discount') {
+                if (cartItem.orderType !== 'shipment') {
+                    profit += cartItem.calculatedPrice - (cartItem.purchase_price * cartItem.quantity);
+                }
+            } else if (cartItem.orderType !== 'shipment') {
+                profit -= cartItem.price;
+            }
+        }
+
+        else
+        {
+            // console.log(cartItem.orderType);
+            total += cartItem.calculatedPrice;
+        }
+    });
+    let grandTotal = 0;
+    // console.log(isTaxExcluded);
+    if (isTaxExcluded) {
+        grandTotal = Number((total + tax).toFixed(2));
+    } else grandTotal = Number((total + tax).toFixed(2));
+
+
+    //final subtraction for return product discount on subtotal calculation
+    if ((salesOrReturnType === 'returns' || receiveOrReturnType === 'returns')) {
+
+        let originalSale = originalSoldOrder(returnOrder),
+            isEqualCart = parseInt(originalSale.cartWithoutDiscount.length) === parseInt(cart.length),
+            isEqualCartQuantity = matchCartItemAndQuantity(originalSale.cartWithoutDiscount, cart, originalSale);
+
+        if (isEqualCart && isEqualCartQuantity) {
+
+            grandTotal = grandTotal + discountOnSubtotal;
+            total = total + discountOnSubtotal;
+
+        } else {
+
+            adjustedDiscount = (originalSale.discountOnSubtotalPercentage * subTotal) / 100;
+            grandTotal = originalSale.isPartial ? grandTotal + Math.abs(adjustedDiscount) : grandTotal + adjustedDiscount;
+            total = total + adjustedDiscount;
+        }
+    }
+
+    // console.log({
+    //     total: total,
+    //     profit: profit,
+    //     tax: Number(tax).toFixed(2),
+    //     subTotal: subTotal,
+    //     grandTotal: grandTotal,
+    //     productTotalWithoutDiscount: productTotalWithoutDiscount,
+    //     adjustedDiscount: adjustedDiscount,
+    // });
+    
+
+    return {
+        total: total,
+        profit: profit,
+        tax: tax,
+        subTotal: subTotal,
+        grandTotal: grandTotal,
+        productTotalWithoutDiscount: productTotalWithoutDiscount,
+        adjustedDiscount: adjustedDiscount,
+    }
+}
+
 export const subTotalAmount = function (
     discountOnSubtotal,
     salesOrReturnType,
@@ -10,7 +159,8 @@ export const subTotalAmount = function (
     productTotalWithoutDiscount,
     isTaxExcluded,
     orders,
-    originalSoldProductForReturn
+    originalSoldProductForReturn,
+    newTax
 ) {
     total = 0;
     profit = 0;
@@ -25,55 +175,67 @@ export const subTotalAmount = function (
     }
 
     cart.forEach((cartItem) => {
+        console.log(cartItem);
         let calculatedPriceForSub = 0;
         productTotalWithoutDiscount += cartItem.price;
 
-        if (cartItem.quantity > 0) {
-
-            cartItem.calculatedPrice = cartItem.price * cartItem.quantity;
-
-            if (cartItem.orderType !== "discount" && cartItem.discount != undefined) {
-
-                calculatedPriceForSub = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
-
-            } else if (cartItem.orderType !== "discount" && cartItem.discount == undefined) {
-
+        if(cartItem.orderType !== 'delivery')
+        {
+            if (cartItem.quantity > 0) {
+    
+                cartItem.calculatedPrice = cartItem.price * cartItem.quantity;
+    
+                if (cartItem.orderType !== "discount" && cartItem.discount != undefined) {
+    
+                    calculatedPriceForSub = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
+    
+                } else if (cartItem.orderType !== "discount" && cartItem.discount == undefined) {
+    
+                    calculatedPriceForSub = cartItem.calculatedPrice;
+                }
+    
+    
+                if (cartItem.discount) {
+                    cartItem.calculatedPrice = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
+                }
+                tax += (cartItem.calculatedPrice * cartItem.productTaxPercentage) / 100;
+    
+            } else if (salesOrReturnType === 'returns' || receiveOrReturnType === 'returns') {
+    
+                console.log("else",salesOrReturnType, receiveOrReturnType)
+                cartItem.calculatedPrice = cartItem.price * cartItem.quantity;
+                cartItem.discount = cartItem.discount >= 0 ? cartItem.discount : 100;
+    
+                cartItem.calculatedPrice = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
+                tax += (cartItem.calculatedPrice * cartItem.productTaxPercentage) / 100;
                 calculatedPriceForSub = cartItem.calculatedPrice;
             }
-
-
-            if (cartItem.discount) {
-                cartItem.calculatedPrice = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
+    
+            total += cartItem.calculatedPrice;
+            subTotal += calculatedPriceForSub;
+    
+            if (cartItem.orderType !== 'discount') {
+                if (cartItem.orderType !== 'shipment') {
+                    profit += cartItem.calculatedPrice - (cartItem.purchase_price * cartItem.quantity);
+                }
+            } else if (cartItem.orderType !== 'shipment') {
+                profit -= cartItem.price;
             }
-            tax += (cartItem.calculatedPrice * cartItem.productTaxPercentage) / 100;
-
-        } else if (salesOrReturnType === 'returns' || receiveOrReturnType === 'returns') {
-
-            console.log("else",salesOrReturnType, receiveOrReturnType)
-            cartItem.calculatedPrice = cartItem.price * cartItem.quantity;
-            cartItem.discount = cartItem.discount >= 0 ? cartItem.discount : 100;
-
-            cartItem.calculatedPrice = cartItem.calculatedPrice - (cartItem.calculatedPrice * cartItem.discount / 100);
-            tax += (cartItem.calculatedPrice * cartItem.productTaxPercentage) / 100;
-            calculatedPriceForSub = cartItem.calculatedPrice;
         }
 
-        total += cartItem.calculatedPrice;
-        subTotal += calculatedPriceForSub;
-
-        if (cartItem.orderType !== 'discount') {
-            if (cartItem.orderType !== 'shipment') {
-                profit += cartItem.calculatedPrice - (cartItem.purchase_price * cartItem.quantity);
-            }
-        } else if (cartItem.orderType !== 'shipment') {
-            profit -= cartItem.price;
+        else
+        {
+            console.log(cartItem.orderType);
+            total += cartItem.calculatedPrice;
         }
     });
+    tax = newTax;
 
     let grandTotal;
+    console.log(isTaxExcluded);
     if (isTaxExcluded) {
         grandTotal = Number((total + tax).toFixed(2));
-    } else grandTotal = Number((total).toFixed(2));
+    } else grandTotal = Number((total + tax).toFixed(2));
 
 
     //final subtraction for return product discount on subtotal calculation
@@ -175,6 +337,7 @@ const matchCartItemAndQuantity = (originalSoldCart, currentCart, originalSale) =
 * */
 
 export const cartItemsToCookie = function (flag = 0, object, appVersion) {
+    
     let cookieName = appVersion + "-user-" + object.user.id + "-" + object.order_type + "-cart",
         cookieObject = {
             'cart': object.cart,
@@ -183,6 +346,7 @@ export const cartItemsToCookie = function (flag = 0, object, appVersion) {
             'orderID': object.orderID,
             'orderIdInternalTransfer': object.orderIdInternalTransfer,
             'discount': object.discount,
+            'newTax': object.newTax,
             'overAllDiscount': object.overAllDiscount,
             'lastInvoiceNumber': object.lastInvoiceNumber,
             'addShipping': object.addShipping,
@@ -217,6 +381,7 @@ export const cartItemsToCookie = function (flag = 0, object, appVersion) {
             object.overAllDiscount = cookieValue.overAllDiscount;
             object.newOverAllDiscount = cookieValue.overAllDiscount;
             object.orderID = cookieValue.orderID;
+            object.newTax = cookieValue.newTax;
             if (object.selectedCustomer.length == 1) {
                 object.customerNotAdded = false;
             }
@@ -237,6 +402,7 @@ export const cartItemsToCookie = function (flag = 0, object, appVersion) {
         cart: object.cart,
         selectedSearchBranch: object.selectedSearchBranch,
         addShipping: object.addShipping,
+        newTax: Number(object.newTax)
     }
 }
 
@@ -245,6 +411,19 @@ export const cartItemsToCookie = function (flag = 0, object, appVersion) {
 * */
 export const deleteCartItemsFromCookieOrDB = function (user, order_type, appVersion) {
     window.$cookies.remove(appVersion + "-user-" + user.id + "-" + order_type + "-cart");
+}
+
+export const getDeliveryOrPickupDetails = function(){
+    return [
+        localStorage.getItem('deliveryOrPickup'), 
+        localStorage.getItem('deliveryOrPickupDate'),localStorage.getItem('deliveryCharges') ]
+}
+
+
+export const deleteLocalStorageItemsForDeliveryAndPickup = function (){
+    localStorage.removeItem('deliveryOrPickup');
+    localStorage.removeItem('deliveryOrPickupDate');
+    localStorage.removeItem('deliveryCharges');
 }
 
 

@@ -21,7 +21,10 @@ class Order extends BaseModel
         'total_tax',
         'all_discount',
         'total',
-        'due_amount', 'type', 'profit', 'status', 'branch_id', 'transfer_branch_id', 'table_id', 'created_by', 'returned_invoice', 'return_type', 'customer_id', 'supplier_id', 'invoice_id', 'created_at', 'delivery_or_pickup', 'delivery_or_pickup_date', 'delivery_charges', 'order_status'];
+        'due_amount', 'type', 'profit', 'status', 'branch_id', 'transfer_branch_id', 'table_id', 'created_by', 'returned_invoice', 'return_type', 'customer_id', 'supplier_id', 'invoice_id', 'created_at', 'delivery_or_pickup', 'delivery_or_pickup_date', 'delivery_charges', 'order_status',
+        'cart_info',
+        'tax_percentage'
+    ];
 
     protected $casts = [
         'sub_total' => 'float',
@@ -194,7 +197,7 @@ class Order extends BaseModel
         }
     }
 
-    public static function orderDetails($id, $cashRegister)
+    public static function orderDetails($id, $cashRegister = null)
     {
         $joinTable = DB::table('orders')
             ->join('payments', 'payments.order_id', '=', 'orders.id')
@@ -664,6 +667,7 @@ class Order extends BaseModel
                         'orders.invoice_id',
                         'orders.sub_total',
                         'orders.total',
+                        'orders.delivery_charges',
                         'orders.due_amount',
                         'payments.paid',
                         DB::raw('abs(sum(payments.exchange)) as exchange'),
@@ -695,6 +699,7 @@ class Order extends BaseModel
                             'orders.total',
                             'orders.due_amount',
                             'orders.table_id',
+                            'orders.delivery_charges',
                             'restaurant_tables.name as table_name',
                             'payments.paid',
                             DB::raw('abs(sum(payments.exchange)) as exchange'),
@@ -987,6 +992,10 @@ class Order extends BaseModel
 
     }
 
+    public static function orderUpdated($id)
+    {
+        Order::where('id', $id)->update(['status' => 'delete','order_status' => 'updated']);
+    }
 
     // Product Store
 
@@ -1118,17 +1127,75 @@ class Order extends BaseModel
 
     public static function getPackingSlipHeaderInfo($id)
     {
-        return Order::query()->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+        return Order::query()
+            ->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+            ->leftJoin('customer_groups', 'customer_groups.id', '=', 'customers.customer_group')
+            ->leftJoin('users', 'users.id', '=', 'orders.created_by')
             ->select(
                 'orders.id',
+                DB::raw('CONCAT(UCASE(MID(orders.delivery_or_pickup,1,1)),MID(orders.delivery_or_pickup,2)) AS delivery_or_pickup'),
+                DB::raw('DATE_FORMAT(orders.delivery_or_pickup_date,"%m/%d/%Y") AS delivery_or_pickup_date'),
                 DB::raw('DATE_FORMAT(orders.date,"%m/%d/%Y") AS date '),
                 'orders.invoice_id',
-                DB::raw("(CASE WHEN customers.first_name <> '' AND customers.last_name <> '' THEN CONCAT(customers.first_name, ' ',customers.last_name) ELSE 'Walk-in customer' END) AS customer ")
-                
+                DB::raw("(CASE WHEN customers.first_name <> '' AND customers.last_name <> '' THEN CONCAT(customers.first_name, ' ',customers.last_name) ELSE 'Walk-in customer' END) AS customer "),
+                'customer_groups.title AS customer_type',
+                DB::raw('CONCAT(users.first_name, " ", users.last_name) as received_by')
             )
             ->where('orders.order_type', '=', 'sales')
             ->where('orders.status', '=', 'done')
             ->where('orders.id', '=', $id)->first();
+    }
+
+
+    public static function getInvoiceDetailsHeaderInfo($id)
+    {
+        return Order::query()
+            ->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+            ->leftJoin('customer_groups', 'customer_groups.id', '=', 'customers.customer_group')
+            ->leftJoin('users', 'users.id', '=', 'orders.created_by')
+            ->select(
+                'orders.id',
+                DB::raw('CONCAT(UCASE(MID(orders.delivery_or_pickup,1,1)),MID(orders.delivery_or_pickup,2)) AS delivery_or_pickup'),
+                DB::raw('DATE_FORMAT(orders.delivery_or_pickup_date,"%m/%d/%Y") AS delivery_or_pickup_date'),
+                DB::raw('DATE_FORMAT(orders.date,"%m/%d/%Y") AS date '),
+                'orders.invoice_id',
+                DB::raw("(CASE WHEN customers.first_name <> '' AND customers.last_name <> '' THEN CONCAT(customers.first_name, ' ',customers.last_name) ELSE 'Walk-in customer' END) AS customer "),
+                'customer_groups.title AS customer_type',
+                DB::raw('CONCAT(users.first_name, " ", users.last_name) as received_by')
+                
+            )
+            ->where('orders.order_type', '=', 'sales')
+            ->where('orders.id', '=', $id)->first();
+    }
+
+    public static function getInvoiceDetailsFooterInfo($id)
+    {
+        $orderDetails =  Order::query()->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+            // ->leftjoin('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->select(
+                'orders.id',
+                'orders.total',
+                'orders.due_amount',
+                'orders.sub_total',
+                'orders.total_tax',
+                // 'order_items.price as delivery_charges',
+                'orders.invoice_id'                
+            )
+            // ->where('order_items.type', '=', 'delivery')
+            ->where('orders.order_type', '=', 'sales')
+            ->where('orders.id', '=', $id)->first();
+        $deliveryDetails = OrderItems::where('order_id', '=', $id)->where('order_items.type', '=', 'delivery')->first();
+
+        if($deliveryDetails)
+        {
+            $orderDetails->delivery_charges = $deliveryDetails->price;
+        }
+        else
+        {
+            $orderDetails->delivery_charges = 0;
+        }
+
+        return $orderDetails;
     }
 
     public static function updateOrderStatus($data)
@@ -1142,5 +1209,21 @@ class Order extends BaseModel
     {
         return Order::where('order_type', '=', 'sales')->where('status', '=', 'done')->get();
     }
+
+    public static function getOrderDetailsForUpdate($orderId)
+    {
+        return Order::where('orders.id', '=', $orderId)->where('order_type', '=', 'sales')->where('status', '=', 'done')->whereIn('order_status', [
+            'pending',
+            'processing',
+            'hold'
+        ])->first();
+        
+    }
+
+    public static function getOldOrderDetails($orderId)
+    {
+        return Order::getOne($orderId)->toArray();
+    }
+
     
 }

@@ -14,14 +14,14 @@
                 <i class="la la-close la-2x"></i>
             </a>
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link open-todo-icon"
                        href="#"
                        @click.prevent="openTodo"
                        :class="{disabled:!isConnected && offline == 1}">
                         <i class="la la-list-ul la-2x"></i>
                     </a>
-                </li>
+                </li> -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle hide-dropdown-icon"
                        href="#"
@@ -99,8 +99,8 @@
                     </li>
                     <li>
                         <a :href="publicPath+'/orders'" class="app-color-text">
-                            <i class="la la-shopping-cart"></i>
-                            {{ trans('lang.sales') }}
+                            <i class="la la-shopping-cart la-2x"></i>
+                            Order Management
                         </a>
                     </li>
                     <!-- <li>
@@ -115,14 +115,14 @@
                             <i class="la la-pie-chart la-2x"></i>
                             {{ trans('lang.reports') }}
                         </a>
-                    </li>
+                    </li> -->
                     <li>
                         <a :href="publicPath+'/settings'" class="app-color-text">
                             <i class="la la-gear la-2x"></i>
                             {{
                             trans('lang.settings') }}
                         </a>
-                    </li> -->
+                    </li>
                 </ul>
             </div>
             <div class="side-nav-close"

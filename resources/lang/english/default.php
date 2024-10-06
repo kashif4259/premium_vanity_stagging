@@ -1294,5 +1294,14 @@ return array(
     'order_status_cancelled' => 'Cancelled',
     'order_delivery_type' => 'Order Delivery Type',
     'order_delivery_date' => 'Delivery Date',
-    'order_pickup_date' => 'Pickedup Date'
+    'order_pickup_date' => 'Pickedup Date',
+    'order_days' => 'Days',
+    'delivery' => 'Delivery',
+    'pickedup' => 'PickedUp',
+    'customer_phone_number' => 'Customer Phone',
+
+    'todos' => 'Todos',
+    'to_do_title' => 'Todo',
+    'assigned_to' => 'Assigned To',
+    'assigned_by' => 'Assigned By'
 );

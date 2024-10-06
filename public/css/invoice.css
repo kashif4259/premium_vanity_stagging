@@ -89,3 +89,32 @@
   text-align: right;
 }
 
+@media print {
+  .order-print-main {
+    font-family: 'Lato', sans-serif;
+    color: #535561;
+    -webkit-font-feature-settings: "lnum";
+    font-feature-settings: "lnum";
+    font-size: 12px;
+  }
+
+  .order-print-main thead {
+    display: table-row-group;
+  }
+
+  .order-print-main table,
+  .order-print-main th,
+  .order-print-main td {
+    border-collapse: collapse;
+  }
+
+  .order-print-main .item-tbl-print {
+    font-size: 10px;
+  }
+
+  h1 {
+    font-weight: 400;
+    font-size: 13px;
+  }
+}
+

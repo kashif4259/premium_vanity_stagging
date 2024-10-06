@@ -239,13 +239,16 @@
                             </div>
 
                             <div v-if="salesOrReceivingType !== 'internal-transfer'" class="form-group row ml-0">
-                                <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label"
-                                       :for="paid">{{ paymentName }}</label>
+                                <!-- <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label"
+                                       :for="paid">{{ paymentName }}</label> -->
+                                       <label class="col-4 col-sm-6 col-md-5 col-lg-4 col-form-label"
+                                       :for="paid">Balance Due</label>
                                 <div class="col-4 col-sm-6 col-md-7 col-lg-8 col-xl-8 pl-0">
                                     <payment-input id="'paid'"
                                                    v-if="paymentGuard"
                                                    :inputValue="decimalFormat(paymentValue)"
-                                                   @input="getPaymentAmount">
+                                                   @input="getPaymentAmount"
+                                                   :readonly="totalAmountFieldReadOnly">
                                     </payment-input>
                                 </div>
                             </div>
@@ -295,7 +298,8 @@
                                                name="deliveryCharges"
                                                type="text"
                                                class="form-control"
-                                               v-model="deliveryCharges"/>
+                                               v-model="deliveryCharges"
+                                                @change="updateDeliveryCharges(deliveryCharges)"/>
                                     <div class="heightError">
                                         <small class="text-danger" v-show="errors.has('deliveryCharges')">
                                             {{ errors.first('deliveryCharges') }}
@@ -441,23 +445,26 @@
                                                :id="paymentTypes.id"
                                                class="btn app-color mobile-btn mr-1 mb-1"
                                                :class="{activePayment: paymentName==paymentTypes.name}"
-                                               @click.prevent="setPayment(paymentTypes.id,paymentTypes.name,paymentTypes.status,paymentTypes.type)">
-                                                    {{ paymentTypes.name }}
+                                               @click.prevent="setPayment(paymentTypes.id,paymentTypes.name,paymentTypes.status,paymentTypes.type,false,false)">
+                                                    <!-- {{ paymentTypes.name }}  -->
+                                                    {{ salesOrReceivingType == 'supplier' ? 'Cash' : 'Full payment' }}
                                             </button>
                                             <!--This credit button display when customer selected-->
+                                            <!-- v-else-if="(salesOrReceivingType === 'customer' || salesOrReceivingType === 'supplier') && !isEmptyObj(finalCart.customer) && (paid >= 0 && noRoundingAmount >=0)" -->
                                             <button
-                                                v-else-if="(salesOrReceivingType === 'customer' || salesOrReceivingType === 'supplier') && !isEmptyObj(finalCart.customer) && (paid >= 0 && noRoundingAmount >=0)"
+                                                
+                                            v-else-if="(salesOrReceivingType === 'customer') && !isEmptyObj(finalCart.customer) && (paid >= 0 && noRoundingAmount >=0)"
                                                 :id="paymentTypes.id"
                                                 class="btn app-color mobile-btn mr-1 mb-1"
                                                 :class="{activePayment: paymentName==paymentTypes.name}"
-                                                @click.prevent="setPayment(paymentTypes.id,paymentTypes.name,paymentTypes.status,paymentTypes.type)">
-                                                    {{ paymentTypes.name }}
+                                                @click.prevent="setPayment(paymentTypes.id,paymentTypes.name,paymentTypes.status,paymentTypes.type, false, true)">
+                                                    <!-- {{ paymentTypes.name }} --> Partial payment
                                             </button>
                                             <button v-else-if="salesOrReceivingType === 'internal'"
                                                     :id="paymentTypes.id"
                                                     class="btn app-color mobile-btn mr-1 mb-1"
                                                     :class="{activePayment: paymentName==paymentTypes.name}"
-                                                    @click.prevent="setPayment(paymentTypes.id,paymentTypes.name,paymentTypes.status,paymentTypes.type)">
+                                                    @click.prevent="setPayment(paymentTypes.id,paymentTypes.name,paymentTypes.status,paymentTypes.type, false, false)">
                                                     {{ paymentTypes.name }}
                                             </button>
                                         </span>
@@ -641,6 +648,7 @@ export default {
         'add_shipping',
         'is_template_default',
         'invoice_size',
+
     ],
 }
 </script>

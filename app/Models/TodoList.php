@@ -14,13 +14,16 @@ class TodoList extends BaseModel
         $userId = Auth()->user()->id;
         $query = DB::table('todo_lists')
             ->join('users', 'users.id', '=', 'todo_lists.user_id')
+            ->join('users as u2', 'u2.id', '=', 'todo_lists.user_id')
             ->select(
                 'todo_lists.id as todo_id',
                 'todo_lists.title as title',
                 'todo_lists.due_date as due_date',
                 'todo_lists.completed_date as completed_date',
                 'todo_lists.completed as completed',
-                DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by")
+                'todo_lists.description',
+                DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by"),
+                DB::raw("CONCAT(u2.first_name,' ',u2.last_name)  AS assigned_to")
             )->where('todo_lists.user_id', $userId);
 
         if ($sortBy == 'due_date') {

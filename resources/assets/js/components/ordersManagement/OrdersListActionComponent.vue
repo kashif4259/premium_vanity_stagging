@@ -9,11 +9,10 @@
 
             <a v-if="salesListDelete == 1 && this.rowData.order_status != 'Cancelled'" href="" class='action-button'  data-toggle="modal" data-target="#confirm-delete" @click.prevent="selectedDeletableId(rowData.id,rowIndex)"><i class="la la-trash-o la-2x"></i></a>
 
-            <!-- <a v-if="salesListEdit == 1" href="" class='action-button'  data-toggle="modal"
-               data-target="#date-edit-modal"
-               @click.prevent="editSalesDate(rowData,rowIndex)">
+            <a v-if="salesListEdit == 1 && (this.rowData.order_status != 'Pending' || this.rowData.order_status != 'Processing' || this.rowData.order_status != 'Hold') && (this.rowData.order_status != 'Cancelled') " 
+                :href="publicPath+'/orders/'+rowData.id+'/edit'"  class='action-button'>
                 <i class="la la-edit la-2x"></i>
-            </a> -->
+            </a>
 
             <!-- generate packing slip button here-->
             <a v-if="salesListEdit == 1 && this.rowData.order_status != 'Cancelled' " href="" class='action-button'  data-toggle="modal"
@@ -28,6 +27,19 @@
                 <i class="la la-building la-2x"></i>
             </a>
 
+            <!-- generate invoice --> 
+            <a v-if="salesListEdit == 1 " href="" class='action-button'  data-toggle="modal"
+               data-target="#generate-invoice-modal"
+               @click.prevent="generateInvoice(rowData,rowIndex)">
+               <i class="la-align-justify"/>
+            </a>
+
+            <!-- generate payments --> 
+            <a v-if="salesListEdit == 1 " href="" class='action-button'  data-toggle="modal"
+               data-target="#generate-payments-history-modal"
+               @click.prevent="generatePaymentsHistory(rowData,rowIndex)">
+               <i class="la la-list-alt"/>
+            </a>
         </div>
 
         <i class="la la-ellipsis-v la-1x"/>
@@ -67,7 +79,12 @@
             generatePackingSlip(rowdata, index){
                 this.$hub.$emit('generatePackingSlip', rowdata, index);
             },
-
+            generateInvoice(rowdata, index){
+                this.$hub.$emit('generateInvoice', rowdata, index);
+            },
+            generatePaymentsHistory(rowdata, index){
+                this.$hub.$emit('generatePaymentsHistory', rowdata, index);
+            },
             changeOrderStatus(rowData, index){
                 this.$hub.$emit('changeOrderStatus', rowData, index);
             }

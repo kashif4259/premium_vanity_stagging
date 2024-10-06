@@ -443,6 +443,7 @@ class SalesController extends Controller
         $allDiscount = $request->discount; //percentage discount on entire sell
         $grandTotal = $request->grandTotal;
         $payment = $request->payments;
+        
         $orderID = $request->orderID;
         $orderIdInternalTransfer = $request->orderIdInternalTransfer;
         $transferBranch = $request->transferBranch;
@@ -458,7 +459,7 @@ class SalesController extends Controller
         $totalReturnedProduct = 0;
         $totalCartProduct = 0;
         $returnProductProfit = 0;
-
+        $emailSent = false;
 
         /*Section for Return Order product in cart*/
         if ($request->salesOrReturnType == 'returns') {
@@ -517,7 +518,7 @@ class SalesController extends Controller
         foreach ($request->cart as $cart) {
             $availableQuantityCheck = OrderItems::checkAvailableQuantity($cart['variantID']);
 
-            if ($cart['orderType'] !== 'discount') {
+            if ($cart['orderType'] !== 'discount' && $cart['orderType'] !== 'delivery') {
                 $outOfStockVariantTitle = $cart['variantTitle'] ? ' (' . $cart['variantTitle'] . ') ' : ' ' . $cart['variantTitle'] . ' ';
                 if ($outOfStock == 1 && $request->orderType == 'sales' && $request->status == 'done' && $cart['quantity'] > $availableQuantityCheck && $cart['quantity'] > 0) {
                     $checkAvailableQuantity = 'true';
@@ -571,6 +572,9 @@ class SalesController extends Controller
                 }
             }
         }
+
+        $cartSaveIntoDb = json_encode($carts);
+
         if (($orderStatus == 'done' && !$orderID) || ($orderStatus == 'pending' && !$orderID) || ($orderStatus == 'hold' && !$orderID)) {
             $orderData = array();
             $orderData['date'] = $date;
@@ -588,6 +592,8 @@ class SalesController extends Controller
             $orderData['delivery_or_pickup_date'] = $request->deliveryOrPickupDate;
             $orderData['delivery_charges'] = $request->deliveryCharges;
             $orderData['order_status'] = 'pending';
+            $orderData['cart_info'] = $cartSaveIntoDb;
+            $orderData['tax_percentage'] = $request->input('taxPercentage', '0');            
 
             if ($orderData['total'] >= 0 || $salesOrReceivingType == "internal-transfer") {
                 $orderData['order_type'] = $orderType;
@@ -698,6 +704,7 @@ class SalesController extends Controller
             $orders['delivery_or_pickup_date'] = $request->deliveryOrPickupDate;
             $orders['delivery_charges'] = $request->deliveryCharges;
             $orderData['order_status'] = 'pending';
+            $orderData['cart_info'] = $cartSaveIntoDb;
 
             if ($orders['total'] < 0) {
                 $getReturnProduct = Order::getReturnProduct($carts[0]['invoiceReturnId'], $orderType);
@@ -843,7 +850,7 @@ class SalesController extends Controller
                 'orderID' => $orderID,
                 'orderIdInternalTransfer' => $orderIdInternalTransfer
             ];
-
+            $emailSent = true;
             return $response;
 
         } else {
@@ -921,7 +928,6 @@ class SalesController extends Controller
                     'message' => Lang::get('lang.payment_done_successfully'),
                     'lastInvoiceId' => $lastInvoiceId,
                 ];
-
                 return $response;
             }
         }
@@ -1012,7 +1018,7 @@ class SalesController extends Controller
         } else {
             $cashRegisterID = null;
         }
-
+        // dd($payments, $paymentType);
         $deleteRow = Payments::destroyByOrderAndType($orderId, $paymentType);
 
         if (isset($payments)) {
@@ -1029,7 +1035,8 @@ class SalesController extends Controller
                         'options' => serialize($rowPayment['options']),
                         'order_id' => $orderId,
                         'cash_register_id' => $cashRegisterID,
-                        'created_at' => $rowPayment['PaymentTime']
+                        'created_at' => $rowPayment['PaymentTime'],
+                        'created_by' => $userId
                     ]
                 );
 
@@ -1154,7 +1161,7 @@ class SalesController extends Controller
             $orderItems = $this->formatOrdersItems($orderID);
             $appName = Config::get('app_name');
             $invoiceLogo = Config::get('invoiceLogo');
-            $fileNameToStore = 'Gain-' . $order->invoice_id . '.pdf';
+            $fileNameToStore = 'Noble-' . $order->invoice_id . '.pdf';
 
             $pdf = PDF::loadView('invoice.invoiceTemplate',
                 compact('templateData', 'orderItems', 'order', 'appName', 'invoiceLogo')

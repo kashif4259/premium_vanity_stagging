@@ -1081,6 +1081,7 @@ export default {
                     );
                     instance.hideCommonInput = true;
                     instance.setPreLoader(true);
+                    instance.isCustomization = response.data.productDetails.is_customization;
                 },
                 function(response) {
                     instance.setPreLoader(true);
@@ -1325,7 +1326,8 @@ export default {
                                     enabled: instance.productEnabled,
                                     variantDetails: instance.productVariant,
                                     image: instance.product.image,
-                                    chipValues: instance.chipArray
+                                    chipValues: instance.chipArray,
+                                    is_customization:instance.isCustomization
                                 }
                             );
                         } else {

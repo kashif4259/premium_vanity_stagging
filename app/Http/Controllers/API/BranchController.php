@@ -227,12 +227,14 @@ class BranchController extends Controller
         $authUser = Auth::user();
         $branches = [];
         $adjustMentTypes = [];
-        if ($authUser->is_admin == 1) {
-            $branches = Branch::index('*');
-        } else {
-            $branchId = $authUser->branch_id;
-            $branches = Branch::getBranch($branchId);
-        }
+        $branchId = $authUser->branch_id;
+        $branches = Branch::getBranch($branchId);
+        // if ($authUser->is_admin == 1) {
+        //     $branches = Branch::index('*');
+        // } else {
+        //     $branchId = $authUser->branch_id;
+        //     $branches = Branch::getBranch($branchId);
+        // }
         $adjustMentTypes = AdjustProductStockType::index('*');
         return [
             'branches' => $branches,

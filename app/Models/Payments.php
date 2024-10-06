@@ -63,6 +63,33 @@ class Payments extends BaseModel
         }
     }
 
+    public static function paymentReportListForOrdersManagementSystem($order_id)
+    {
+        // $perm = new PermissionController();
+        // $permission = $perm->checkPaymentPermission();
+        $due_amount = Order::select('orders.due_amount')->find($order_id)->due_amount;
+        $query = Payments::select('payments.id', 'payments.order_id', 'payments.date', 'payments.paid', 'orders.invoice_id as invoice_id', 'payments.exchange', 'payment_types.name as payment_method', 'orders.customer_id', 'orders.order_type', 'orders.created_by', 'cash_registers.title as cash_register', DB::raw('CONCAT(users.first_name, " ", users.last_name) as received_by'),
+            DB::raw('(CASE WHEN orders.order_type = "sales" THEN concat(customers.first_name," ", customers.last_name) ELSE concat(users.first_name," ", users.last_name) END) as paid_by'),
+            DB::raw('(CASE WHEN orders.order_type = "sales" THEN orders.customer_id ELSE orders.created_by END) as paid_id'))
+            ->leftJoin('payment_types', 'payment_types.id', '=', 'payments.payment_method')
+            ->leftJoin('cash_registers', 'cash_registers.id', '=', 'payments.cash_register_id')
+            ->leftJoin('orders', 'payments.order_id', '=', 'orders.id')
+            ->leftJoin('users', 'users.id', '=', 'orders.created_by')
+            ->leftJoin('users as received_users', 'received_users.id', '=', 'payments.created_by')
+            ->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+            ->where('payments.order_id', '=', $order_id);
+            
+        if ($due_amount > 0) {
+            $query->where('payments.paid', '!=',$due_amount);
+        }
+
+        $count = $query->count();
+        $data = $query->orderBy('payments.id')->get();
+        
+        return ['data' => $data, 'count' => $count, 'due_amount' => $due_amount];
+        
+    }
+
     public static function paymentSummary($filtersData, $columnName, $columnSortedBy, $limit, $offset, $requestType)
     {
         $query = Payments::leftJoin('payment_types', 'payment_types.id', '=', 'payments.payment_method')
@@ -202,6 +229,20 @@ class Payments extends BaseModel
 
     public static function destroyByOrderAndType($orederId, $paymentType)
     {
+
+        $dueAmountPaymentsFromOrder = Order::where('id', $orederId)->first()->due_amount;
+        // $totalPaymentForCredits = Payments::where('order_id', $orederId)->where('payment_method', 2)->sum('paid');
+        $totalPaymentForCreditsCount = Payments::where('order_id', $orederId)->where('payment_method', 2)->count();
+        // dd($totalPaymentsFromOrder, $totalPaymentForCredits, $totalPaymentForCreditsCount);
+
+        if((int) $totalPaymentForCreditsCount === 2 )
+        {
+            Payments::where('order_id', $orederId)->where('paid', '!=', $dueAmountPaymentsFromOrder)->update([
+                'payment_method' => 1
+            ]);
+            return Payments::where('order_id', $orederId)->where('payment_method', 2)->where('paid', '=', $dueAmountPaymentsFromOrder)->delete();  
+        }
+
         return Payments::leftJoin('payment_types', 'payment_types.id', '=', 'payments.payment_method')
             ->where('payments.order_id', $orederId)->where('payment_types.type', $paymentType)->delete();
     }
@@ -228,5 +269,17 @@ class Payments extends BaseModel
     public static function getExchange($orderId)
     {
         return Payments::where('order_id', $orderId)->first();
+    }
+
+    public static function paymentDetailsForUpdateOrder($id)
+    {
+        return Payments::join('payment_types', 'payments.payment_method', 'payment_types.id')
+            ->select('payment_types.name', 'payments.date as PaymentTime', 'payments.exchange', 'payments.is_active', 'payments.options', 'payments.paid'
+                ,'payment_types.id as paymentID',DB::raw("sum(payments.paid) as paid"), 'payment_types.name as paymentName', 'payment_types.type as paymentType'
+            )
+            ->where('payments.order_id', $id)
+            // ->groupBy('payments.order_id')
+            // ->groupBy('payments.payment_method')
+            ->get();
     }
 }

@@ -7,7 +7,7 @@
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script src="{{asset('/js/lang')}}"></script>
+    <script src="{{asset('/js/lang.js')}}"></script>
     <?php
     if (config('gain.installed') && DB::table('settings')->where('setting_name', '=', 'app_name')->exists()) {
         $app_name = DB::table('settings')->where('setting_name', 'app_name')->select('setting_value')->first()->setting_value;

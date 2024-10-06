@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\TodoList;
+use App\Libraries\AllSettingFormat;
+use App\User;
 
 class TodoListController extends Controller
 {
@@ -32,18 +34,31 @@ class TodoListController extends Controller
             'message' => 'something went worong'
         ];
     }
+
+    public function listingView()
+    {
+        $allSettings = new AllSettingFormat;
+
+        $output = [
+            'currentBranch' => $allSettings->getCurrentBranch()
+            
+        ];
+        
+        return view('todos.TodosManagement', $output);
+    }
     public function getTodoData(Request $request)
     {
         $sortBy = $request->sortBy;
         $orderBy = ($sortBy == 'most_recent') ? 'DESC' : 'ASC';
 
         $data = TodoList::getSortedLists($sortBy, $orderBy);
-        return response()->json([
-            'status' => 200,
-            'success' => true,
-            'message' => 'ok',
-            'data' => $data
-        ]);
+        return ['datarows' => $data];
+        // return response()->json([
+        //     'status' => 200,
+        //     'success' => true,
+        //     'message' => 'ok',
+        //     'datarows' => $data
+        // ]);
     }
     public function upDateStatus(Request $request)
     {
@@ -106,5 +121,23 @@ class TodoListController extends Controller
             'success' => false,
             'message' => 'something went worong'
         ];
+    }
+
+    public function getSupportData()
+    {
+        $returnData = [
+            'users' => []
+        ];
+
+        $users = User::getUserList();
+
+        $returnData['users'] = $users;
+
+        return $returnData;
+    }
+
+    public function getTodoFilter()
+    {
+        return [];
     }
 }

@@ -41,7 +41,15 @@
                     <div>{{ trans('lang.sales') }}</div>
                 </a>
             </li>
-
+            <li
+                v-if="receives==1"
+                :class="{'active-side-bar': currentUrl == publicPath+'/receives', 'active-hover': isConnected || offline == 0}"
+            >
+                <a :href="publicPath+'/receives'" :class="{disabled:!isConnected && offline == 1}">
+                    <i class="la la-truck"></i>
+                    <div>{{ trans('lang.receives') }}</div>
+                </a>
+            </li>
             <li
                 v-if="orders==1"
                 :class="{'active-side-bar': currentUrl == publicPath+'/orders', 'active-hover': isConnected || offline == 0}"
@@ -52,24 +60,18 @@
                 </a>
             </li>
 
-            <li
-                v-if="orders==1"
-                :class="{'active-side-bar': currentUrl == publicPath+'/orders', 'active-hover': isConnected || offline == 0}"
+            
+            <!-- <li
+                v-if="todos==1"
+                :class="{'active-side-bar': currentUrl == publicPath+'/todos', 'active-hover': isConnected || offline == 0}"
             >
-                <a :href="publicPath+'/orders'" :class="{disabled:!isConnected && offline == 1}">
+                <a :href="publicPath+'/todos'" :class="{disabled:!isConnected && offline == 1}">
                     <i class="la la-list-ul"></i>
                     <div>Todos Management</div>
                 </a>
-            </li>
-            <!-- <li
-                v-if="receives==1"
-                :class="{'active-side-bar': currentUrl == publicPath+'/receives', 'active-hover': isConnected || offline == 0}"
-            >
-                <a :href="publicPath+'/receives'" :class="{disabled:!isConnected && offline == 1}">
-                    <i class="la la-truck"></i>
-                    <div>{{ trans('lang.receives') }}</div>
-                </a>
-            </li>
+            </li> -->
+            
+            <!--
             <li
                 v-if="isReportActive"
                 :class="{'active-side-bar': currentUrl == publicPath+'/reports', 'active-hover': isConnected || offline == 0}"
@@ -78,7 +80,7 @@
                     <i class="la la-pie-chart"></i>
                     <div>{{ trans('lang.reports') }}</div>
                 </a>
-            </li> 
+            </li> -->
             <li
                 v-if="isSettingActive"
                 :class="{'active-side-bar': currentUrl == publicPath+'/settings', 'active-hover': isConnected || offline == 0}"
@@ -87,7 +89,7 @@
                     <i class="la la-gear"></i>
                     <div>{{ trans('lang.settings') }}</div>
                 </a>
-            </li> -->
+            </li>
         </ul>
     </div>
 </template>
@@ -149,7 +151,8 @@ export default {
         "notification_settings",
         "product_settings",
         "corn_settings",
-        "orders"
+        "orders",
+        "todos"
     ],
     extends: axiosGetPost,
     data() {

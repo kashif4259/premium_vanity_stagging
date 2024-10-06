@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: premium_vanity_stage
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:80"
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/public
+    depends_on:
+      - mysql
+    networks:
+      - laravel_network
+
+  mysql:
+    image: mysql:5.7
+    container_name: premium_vanity_stage_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root             # Set root password for MySQL
+      MYSQL_DATABASE: premium_vanity_stage  # Name of the default database
+    ports:
+      - "5306:3306"                        # Ensure port 5306 is available
+    volumes:
+      - mysql_data:/var/lib/mysql           # Persistent storage for MySQL data
+    networks:
+      - laravel_network
+
+  npm:
+    image: node:14
+    container_name: premium_vanity_stage_npm
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    command: bash -c "npm install && npm run dev"  # Install dependencies first
+    networks:
+      - laravel_network
+
+networks:
+  laravel_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

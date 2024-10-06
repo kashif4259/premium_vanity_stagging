@@ -67,14 +67,14 @@
                     tableName: 'orders',
                     columns: [
                         
-                        {title: 'lang.vanity_hole', key: 'hole', type: 'text', sortable: true},
-                        {title: 'lang.vanity_filler', key: 'filler', type: 'text', sortable: false},
-                        {title: 'lang.vanity_handles', key: 'handles', type: 'text', sortable: true},
-                        {title: 'lang.vanity_drawers', key: 'drawersSide', type: 'text', sortable: true},
-                        {title: 'lang.vanity_color', key: 'color', type: 'text', sortable: true},
-                        {title: 'lang.vanity_size', key: 'size', type: 'text', sortable: true},
+                        {title: 'lang.product_title', key: 'title', type: 'text', sortable: true},
+                        {title: 'lang.item_qtty', key: 'item_purchased', type: 'text', sortable: false},
+                        {title: 'lang.created_by', key: 'created_by', type: 'text', sortable: true},
+                        {title: 'lang.date', key: 'date', type: 'text', sortable: true},
+                        // {title: 'lang.vanity_color', key: 'color', type: 'text', sortable: true},
+                        // {title: 'lang.vanity_size', key: 'size', type: 'text', sortable: true},
                     ],
-                    source: '/orders/variantDetails/' + this.id,
+                    source: '/orders/audit/details/' + this.id,
                 },
             }
         },

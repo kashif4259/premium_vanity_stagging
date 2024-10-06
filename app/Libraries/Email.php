@@ -13,7 +13,7 @@ class Email
     {
 
         $settingCollection = Setting::all();
-
+        
         $fromName = $settingCollection->where('setting_name', 'email_from_name')->pluck('setting_value')->first();
         $fromAddress = $settingCollection->where('setting_name', 'email_from_address')->pluck('setting_value')->first();
         $fromPass = $settingCollection->where('setting_name', 'email_smtp_password')->pluck('setting_value')->first();
@@ -26,6 +26,7 @@ class Email
         $mandrill = $settingCollection->where('setting_name', 'mandrill_api')->pluck('setting_value')->first();
         $sparkpost = $settingCollection->where('setting_name', 'sparkpost_api')->pluck('setting_value')->first();
 
+        // dd($fromAddress, $fromPass, $fromHost, $fromDriver, $fromPort, $fromType, $fromAddress, $fromName, $mandrill, $sparkpost, $mailgunDomain, $mailgunApi);
         if ($fromDriver && $fromAddress) {
             Config::set('mail.username', $fromAddress);
             Config::set('mail.password', $fromPass);
@@ -39,7 +40,6 @@ class Email
             Config::set('services.sparkpost.secret', $sparkpost);
             Config::set('services.mailgun.domain', $mailgunDomain);
             Config::set('services.mailgun.secret', $mailgunApi);
-
 
             if ($fileNameToStore != null) {
 

@@ -312,14 +312,17 @@ Vue.component('product-units-add-edit-form', require('./components/products/unit
 
 //Sales
 Vue.component('sales-or-receives-component', require('./components/salesOrReceives/SalesOrPurchase.vue'));
+Vue.component('edit-or-update-order-component', require('./components/salesOrReceives/EditOrUpdateOrder.vue'));
 Vue.component('sales-list-component', require('./components/salesOrReceives/salesList/SalesList.vue'));
 Vue.component('shipment-list-component', require('./components/salesOrReceives/shipment/ShipmentList.vue'));
 Vue.component('cart-payment-details', require('./components/salesOrReceives/cart/PaymentDetails.vue'));
+Vue.component('cart-payment-details-for-update-order', require('./components/salesOrReceives/cart/PaymentDetailsForUpdateOrder.vue'));
 Vue.component('card-payment-details', require('./components/salesOrReceives/payment/CardPaymentDetailsModal.vue'));
 Vue.component('bank-transfer-details', require('./components/salesOrReceives/payment/BankTransferDetails.vue'));
 Vue.component('cart-due-payment', require('./components/salesOrReceives/cart/DuePayment.vue'));
 Vue.component('sale-date-edit', require('./components/salesOrReceives/modal/SalesDateEdit.vue'));
 Vue.component('cart-component', require('./components/salesOrReceives/cart/CartComponent.vue'));
+Vue.component('cart-component-for-update-order', require('./components/salesOrReceives/cart/CartComponentForUpdateOrder.vue'));
 Vue.component('tax-edit-modal', require('./components/salesOrReceives/modal/TaxEditModal.vue'));
 Vue.component('table-selection-modal', require('./components/salesOrReceives/modal/TableSelectionModal.vue'));
 Vue.component('register-info-modal', require('./components/salesOrReceives/registerInfo/RegisterInfo.vue'));
@@ -441,8 +444,14 @@ Vue.component('orders-management-component', require('./components/ordersManagem
 Vue.component('orders-list-action-component', require('./components/ordersManagement/OrdersListActionComponent.vue'));
 Vue.component('order-details', require('./components/ordersManagement/OrderDetails.vue'));
 Vue.component('order-packing-slip', require('./components/ordersManagement/modal/GeneratePackingSlipComponent.vue'));
-Vue.component('order-packing-slip', require('./components/ordersManagement/modal/GeneratePackingSlipComponent.vue'));
+Vue.component('invoice-slip', require('./components/ordersManagement/modal/GenerateInvoiceComponent.vue'));
+Vue.component('payments-history', require('./components/ordersManagement/modal/GeneratePaymentsHistoryComponent.vue'));
 Vue.component('order-status', require('./components/ordersManagement/modal/ChangeOrderStatus.vue'));
+
+Vue.component('todos-management-component', require('./components/todosManagment/TodosManagement.vue'));
+Vue.component('totos-list-action-component', require('./components/todosManagment/TodosListActionComponent.vue'));
+Vue.component('todos-add-edit-common-modal', require('./components/todosManagment/TodoAddEditModel.vue'));
+
 Window.app = new Vue({
     el: '#app',
     data: {

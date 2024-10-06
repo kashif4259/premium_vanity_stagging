@@ -70,6 +70,8 @@ class InviteController extends Controller
             $email = $request->input('email');
 
             $emailSend = new Email;
+            $send = $emailSend->sendEmail($mailText, $email, $subject);
+            
             if (!$emailSend->sendEmail($mailText, $email, $subject)) {
                 $response = [
                     'message' => Lang::get('lang.something_went_wrong_can_not_send_the_email'),

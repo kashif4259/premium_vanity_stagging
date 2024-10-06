@@ -1542,7 +1542,7 @@
 
 .side-bar ul li.side-bar-logo a img {
   max-height: 64px;
-  max-width: 100%;
+  max-width: 80%;
   display: inline-block;
   vertical-align: middle;
 }

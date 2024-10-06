@@ -60,10 +60,25 @@ export default {
                     return true;
                 }
             },
+            totalAmountFieldReadOnly:true
 
         };
     },
     created() {
+        let deliveryOrPickup = localStorage.getItem('deliveryOrPickup');
+        let deliveryOrPickupDate = localStorage.getItem('deliveryOrPickupDate');
+        let deliveryCharges = localStorage.getItem('deliveryCharges');
+        console.log(deliveryOrPickup);
+        if(deliveryOrPickup !== null){
+            this.deliveryOrPickup = deliveryOrPickup;
+        }
+        if(deliveryOrPickupDate !== null){
+            this.deliveryOrPickupDate = deliveryOrPickupDate;
+        }
+        if(deliveryCharges !== null){
+            this.deliveryCharges = deliveryCharges;
+        }
+
         this.noRoundingAmount = this.finalCart.grandTotal;
         this.addShipmentInfo = this.add_shipping;
         this.addShipmentInfo ? this.addShipment = 1 : this.addShipment = 0;
@@ -96,8 +111,8 @@ export default {
             orderType: "delivery",
             productTitle: "Delivery",
             price: 0,
-            quantity: -1,
-            calculatedPrice: 0,
+            quantity: 1,
+            calculatedPrice: 0.00,
             cartItemNote: "",
             showItemCollapse: false,
             variantTitle: "",
@@ -129,7 +144,7 @@ export default {
             else value = parseFloat(value);
             this.deliveryInfo.price = value;
             this.deliveryInfo.calculatedPrice = value;
-            // this.addDeliveryStatus('delivery');
+            this.addDeliveryStatus(value);
         },
         paid: 'preventCreditPayment',
     },
@@ -146,6 +161,9 @@ export default {
 
     },
     beforeDestroy() {
+        localStorage.setItem('deliveryOrPickup', this.deliveryOrPickup);
+        localStorage.setItem('deliveryOrPickupDate', this.deliveryOrPickupDate);
+        localStorage.setItem('deliveryCharges', this.deliveryCharges);
         if (!this.status.donePaymentCheck) {
             this.storeInvoice('continue');
         }
@@ -157,6 +175,9 @@ export default {
             this.shippingArea = 'area' in tempShipping ?  tempShipping.area : '';
         },
         closeModal() {
+            // localStorage.setItem('deliveryOrPickup', this.deliveryOrPickup);
+            // localStorage.setItem('deliveryOrPickupDate', this.deliveryOrPickupDate);
+            // localStorage.setItem('deliveryCharges', this.deliveryCharges);
         },
         shortcutForDonePayment(value) {
             if (parseInt(this.shortcutKeyInfo.donePayment.status) === 1 && parseInt(this.shortcutStatus) === 1) {
@@ -174,11 +195,24 @@ export default {
             }
         },
         addDeliveryStatus(value) {
+            // console.log(value);return false;
             if(value == 'delivery')
             {
                 this.addDeliveryInfo = true;
-                this.$emit('addShipmentInfo', this.deliveryInfo, true, 'delivery');
+                
             }
+            if(value == 'pickup') {
+                // console.log('pickup condition');
+                // console.log(this.finalCart);
+                this.finalCart.cart = this.finalCart.cart.filter(delivery => delivery.orderType != 'delivery');
+                // console.log('new logic');
+                // console.log(this.finalCart.cart);
+                this.$emit('addShipmentInfo', this.deliveryInfo, true, 'pickup');
+            }
+        },
+
+        updateDeliveryCharges(value) {
+            this.$emit('addShipmentInfo', this.deliveryInfo, true, 'delivery');
         },
         
         getPaymentAmount(value) {
@@ -200,7 +234,29 @@ export default {
                 instance.status.autoInvoiceGenerate = true;
             }
         },
-        setPayment(id, name, status, type, check = true) {
+        setPayment(id, name, status, type, check = true, is_credit_btn = false) {
+            console.log('=========================');
+            console.log("payment name "+name);
+            console.log("status "+status);
+            console.log("type "+ type);
+            console.log("is_credit_btn "+is_credit_btn)
+            console.log("balance "+this.balance);
+            console.log("paidAmout " +this.paidAmount);
+            console.log("finalCart.grandTotal "+this.finalCart.grandTotal);
+            console.log()
+            //this condition is for when user click on credit button then change total amount then click on full payment button then we revert this.paidAmount
+            if(type == 'cash'){
+                this.paidAmount = this.finalCart.grandTotal;
+                
+            }
+            
+            if(is_credit_btn){
+                this.totalAmountFieldReadOnly = false;
+            }
+            else{
+                this.totalAmountFieldReadOnly = true;
+            }
+
             let instance = this;
             instance.paymentGuard = false;
             this.paymentName = name;
@@ -209,13 +265,14 @@ export default {
             this.paymentType = type;
             this.paymentOptions = {};
             this.paid = parseFloat(this.rounding(this.noRoundingAmount)).toFixed(2);
-            this.paymentValue = this.paid;
+            //this.paymentValue = this.paid;
+            this.paymentValue = this.finalCart.grandTotal;//this.paid;
             this.roundingDifference = parseFloat(this.paid - this.noRoundingAmount);
             setTimeout(function () {
                 instance.paymentGuard = true;
             });
             if (check) {
-                this.calculateBalance();
+                this.calculateBalance(is_credit_btn);
             }
         },
         selectDefaultMethod() {
@@ -242,7 +299,7 @@ export default {
         checkPaymentSelected() {
             return _.filter(this.payments, ['paymentName', null]).length;
         },
-        calculateBalance() {
+        calculateBalance(is_credit_btn = false) {
             let data = this.getPaidAndExchangeAmount();
             if (this.salesOrReceivingType === 'internal-transfer') this.finalCart.grandTotal = this.paid;
 
@@ -256,7 +313,17 @@ export default {
             if (lastIndex >= 0) this.paymentListData[lastIndex].exchange = this.exchangeValue;
 
             this.paidAmount = data.paidAmount ? data.paidAmount : this.paid;
-            this.balance = (this.finalCart.grandTotal + this.roundingDifference - data.paidAmount - (this.paid)).toFixed(2);
+
+            if(is_credit_btn){
+                this.balance = (this.finalCart.grandTotal + this.roundingDifference - data.paidAmount - (this.finalCart.grandTotal)).toFixed(2);
+            }else{
+                this.balance = (this.finalCart.grandTotal + this.roundingDifference - data.paidAmount - (this.paid)).toFixed(2);
+            }
+
+            console.log("*************************");
+            console.log("this.balance "+this.balance);
+            console.log("this.paidAmount "+this.paidAmount);
+            console.log("finalCart.grandTotal "+this.finalCart.grandTotal);
         },
         getPaidAndExchangeAmount() {
             let paidAmount = 0,
@@ -399,6 +466,8 @@ export default {
         },
 
         storeInvoiceCart(action) {
+            console.log("action ==>",action);
+            
             let instance = this,
                 paidAmount = 0,
                 exchangedAmount = 0;
@@ -423,6 +492,9 @@ export default {
 
                 let cartItemsToStore = this.finalCart,
                     postURL;
+
+                console.log("taxPercentage ==>",this.finalCart.taxPercentage);
+                
                 
                 cartItemsToStore.salesOrReturnType = this.salesOrReturnType;
                 cartItemsToStore.highest_invoice_number = this.lastInvoiceNumber;
@@ -431,6 +503,7 @@ export default {
 
                 this.returnCondition ? this.calculateBalance() : this.getPaidAndExchangeAmount();
 
+                cartItemsToStore.taxPercentage = this.finalCart.taxPercentage;
                 cartItemsToStore.payments = this.paymentListData;
                 cartItemsToStore.orderID = this.orderID;
                 cartItemsToStore.salesNote = this.salesNote;

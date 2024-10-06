@@ -60,5 +60,6 @@ $data = "$_SERVER[REQUEST_URI]";
         corn_settings={{$permission->cornJobSettingsPermission()}}
         product_settings={{$permission->productSettingsPermission()}}
         orders={{$permission->ordersManagePermission()}}
+        todos={{$permission->todosManagePermission()}}
         >
 </side-bar>

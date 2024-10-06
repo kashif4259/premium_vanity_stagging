@@ -2,7 +2,7 @@
     <div class="main-layout-wrapper" v-if="parseInt(manage_sales) === 1 || parseInt(manage_receives) === 1">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb bg-transparent m-0 pl-0">
-                <li class="breadcrumb-item" v-if="order_type === 'sales'">
+                <!-- <li class="breadcrumb-item" v-if="order_type === 'sales'">
                     <a href="#" data-toggle="modal" class="sales-nav app-color"
                        :class="{disabled:cart.length != 0 || !isConnected && parseInt(offline) === 1}"
                        data-target="#sales-or-return-type-select-modal">
@@ -65,8 +65,8 @@
                        @click.prevent="openRegisterInfoModal">
                         {{ trans('lang.register_info') }}
                     </a>
-                </li>
-                <li v-if="!isConnected">
+                </li> -->
+                <!-- <li v-if="!isConnected">
                     <span class="offline-label mx-3 animated fadeIn delay-2s">
                         <i class="la la-wifi text-danger"/> {{ trans('lang.offline') }}
                     </span>
@@ -75,7 +75,7 @@
                     <span class="online-label mx-3 animated fadeOut delay-5s">
                         <i class="la la-wifi"/> {{ trans('lang.online') }}
                     </span>
-                </li>
+                </li> -->
             </ol>
         </nav>
 
@@ -387,6 +387,7 @@
                         @addOverAllDiscountFromCart="addOverAllDiscount"
                         @allProductDiscountFromCart="allProductDiscount"
                         @setTaxIncludedOrExcludedFromCart="setTaxIncludedOrExcludedFromCart"
+                        @updateTaxOnTotalFromCart="updateTaxOnTotal"
                         @orderHoldFromCart="orderHoldFromCart">
                     </cart-component>
                 </div>
@@ -499,6 +500,7 @@
                                     @addOverAllDiscountFromCart="addOverAllDiscount"
                                     @allProductDiscountFromCart="allProductDiscount"
                                     @setTaxIncludedOrExcludedFromCart="setTaxIncludedOrExcludedFromCart"
+                                    @updateTaxOnTotalFromCart="updateTaxOnTotal"
                                     @orderHoldFromCart="orderHoldFromCart">
                                 </cart-component>
                             </div>

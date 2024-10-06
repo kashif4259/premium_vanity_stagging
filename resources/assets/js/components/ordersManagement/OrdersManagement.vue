@@ -79,6 +79,33 @@
                 </div>
             </div>
 
+            <!--generate invoice-->
+            <div id="generate-invoice-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-xl modal-xxl" role="document">
+                        <invoice-slip class="modal-content"
+                                        v-if="isGenerateInvoice"
+                                        :modalIdForGenerateInvoice="modalIdForGenerateInvoice"
+                                        :row-data="selectedSalesForGenerateInvoice"
+                                        :pre_loader="dueModalPreloader"
+                                        @emitForGenerateInvoice="emitForGenerateInvoice"
+                                        :modal-title="trans('lang.generate_packing_slip')"/>
+                </div>
+            </div>
+
+            <!-- Generate Payments History -->
+            <div id="generate-payments-history-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-xl modal-xxl" role="document">
+                        <payments-history class="modal-content"
+                                        v-if="isGeneratePaymentsHistory"
+                                        :modalIdForGeneratePaymentsHistory="modalIdForGeneratePaymentsHistory"
+                                        :row-data="selectedSalesForGeneratePaymentsHistory"
+                                        :pre_loader="dueModalPreloader"
+                                        @emitForGeneratePaymentsHistory="emitForGeneratePaymentsHistory"
+                                        :modal-title="trans('lang.generate_packing_slip')"/>
+                </div>
+            </div>
+
+
             <!-- change order status popup-->
             <div id="change-order-status-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -115,6 +142,8 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 selectedSalesForDateEdit: null,
                 selectedSalesForGeneratePackingSlip: null,
                 selectedSalesForChangeOrderStatus: null,
+                selectedSalesForGenerateInvoice:null,
+                selectedSalesForGeneratePaymentsHistory: null,
                 isActiveAttributeModal: false,
                 isActiveAttributeModalEdit: false,
                 selectedItemId: "",
@@ -122,6 +151,8 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 modalIdForSalesDateEdit: "#date-edit-modal",
                 modalIdForGeneratePackingSlip: '#generate-packing-slip-modal',
                 modalIdForChangeOrderStatus: '#change-order-status-modal',
+                modalIdForGenerateInvoice: '#generate-invoice-modal',
+                modalIdForGeneratePaymentsHistory: '#generate-payments-history-modal',
                 order_type: "sales",
                 hidePreLoader: false,
                 exportToVue: false,
@@ -137,13 +168,18 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 },
                 currentBranch: JSON.parse(this.current_branch),
                 isGeneratePackingSlip: false,
+                isGenerateInvoice:false,
+                isGeneratePaymentsHistory:false,
                 isGeneratePackingSlipAttributeModal: false,
                 isChangeOrderStatus: false,
-                isChangeOrderStatusAttributeModal: false
+                isChangeOrderStatusAttributeModal: false,
+                isGenerateInvoiceAttributeModal: false,
+                isGeneratePaymentsHistoryAttributeModal: false,
             };
         },
         created() {
             this.getSaleListData();
+            
         },
         mounted() {
             let instance = this;
@@ -169,6 +205,18 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                 instance.isGeneratePackingSlip = true;
             });
 
+            this.$hub.$on("generateInvoice", function (rowdata, index) {
+                instance.isGenerateInvoiceAttributeModal = false;
+                instance.selectedSalesForGenerateInvoice = rowdata;
+                instance.isGenerateInvoice = true;
+            });
+
+            this.$hub.$on("generatePaymentsHistory", function (rowdata, index) {
+                instance.isGeneratePaymentsHistoryAttributeModal = false;
+                instance.selectedSalesForGeneratePaymentsHistory = rowdata;
+                instance.isGeneratePaymentsHistory = true;
+            });
+
             this.$hub.$on("changeOrderStatus", function (rowdata, index) {
                 instance.isChangeOrderStatusAttributeModal = false;
                 instance.selectedSalesForChangeOrderStatus = rowdata;
@@ -189,6 +237,7 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                     "/sales-due-filter",
                     function (response) {
                         if (response.data) {
+                            
                             /*Appending cash register static value(All) with dynamic cash register title from db*/
                             let customers = [
                                 {text: "All", value: "all", selected: true},
@@ -199,7 +248,7 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                 columns: [
                                     {
                                         title: "lang.invoice_id",
-                                        key: "invoice_id",
+                                        key: "invoice_id_with_count",
                                         type: "clickable_link",
                                         source:"orders/details",
                                         uniquefield:"id",
@@ -210,6 +259,12 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                         key: "customer",
                                         type: "text",
                                         source: "customer",
+                                        sortable: true
+                                    },
+                                    {
+                                        title: "lang.customer_phone_number",
+                                        key: "phone_number",
+                                        type: "text",
                                         sortable: true
                                     },
                                     {
@@ -252,6 +307,12 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                     {
                                         title: "lang.order_pickup_date",
                                         key: "pickup_date",
+                                        type: "text",
+                                        sortable: true
+                                    },
+                                    {
+                                        title: "lang.order_days",
+                                        key: "days",
                                         type: "text",
                                         sortable: true
                                     },
@@ -327,6 +388,13 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                             {text: 'lang.order_status_pickedup', value: 'pickedup'},
                                             {text: 'lang.order_status_cancelled', value: 'cancelled'},
                                         ]
+                                    },
+                                    {
+                                        title: 'lang.order_delivery_type', type: 'dropdown', key: 'delivery_or_pickup', options: [
+                                            {text: 'lang.all', value: 'all', selected: true},
+                                            {text: 'lang.delivery', value: 'delivery'},
+                                            {text: 'lang.pickedup', value: 'pickup'},
+                                        ]
                                     }
                                 ]
                             };
@@ -374,6 +442,12 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
             emitForGeneratePackingSlip(value) {
                 this.isGeneratePackingSlip = value;
             },
+            emitForGenerateInvoice(value) {
+                this.isGenerateInvoice = value;
+            },
+            emitForGeneratePaymentsHistory(value) {
+                this.isGeneratePaymentsHistory = value;
+            },
             emitForChangeOrderStatus(value) {
                 this.isChangeOrderStatus = value;
             },
@@ -402,6 +476,16 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
             },
             printBarcode() {
                 this.isPrintBarcode = true;
+            },
+
+            updateLocalStorageForGenrerateSlip(data, orderId) {
+                console.log(data);
+                console.log(orderId);
+                // for (var i = 0; i < data.length; i++) {
+                //     if (data[i][key] === value) {
+                //         return array[i];
+                //     }
+                // }
             }
         }
     };

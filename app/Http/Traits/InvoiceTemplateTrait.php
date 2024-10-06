@@ -179,6 +179,7 @@ trait InvoiceTemplateTrait
         $replace = $this->replaceInvoiceRandomInfo($orderDetails, $allSettingFormat);
         $replace['{discount}'] = $this->replaceDiscount($discountAmount, $allSettingFormat);
         $template = $this->replaceShipmentDetails($template, $orderId, $orderType);
+        $template = $this->replaceDeliveryOrPickupDetails($template, $orderId, $orderType, $cashRegisterId);
 
         $replace['{table_name}'] = '';
         if ($orderDetails->table_id != null) {
@@ -232,6 +233,19 @@ trait InvoiceTemplateTrait
             $template = str_replace('{shipment_amount}', $price, $template);
             $template = str_replace('{shipment_address}', $shippingAddress, $template);
         }
+
+        return $template;
+    }
+
+    public function replaceDeliveryOrPickupDetails($template, $orderId, $orderType, $cashRegisterId)
+    {
+        $allSettingFormat = new AllSettingFormat;
+
+        $orderDetails = Order::getOrderDetailsForInvoice($orderId, $orderType, $cashRegisterId);
+
+        $delivery_charges = $allSettingFormat->getCurrency($allSettingFormat->thousandSep($orderDetails->delivery_charges));
+       
+        $template = str_replace('{delivery_charges}', $delivery_charges, $template);
 
         return $template;
     }

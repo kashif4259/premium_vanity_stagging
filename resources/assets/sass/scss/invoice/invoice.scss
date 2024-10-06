@@ -99,3 +99,36 @@
     }
   }
 }
+
+
+@media print
+{
+  .order-print-main{
+    font-family: 'Lato', sans-serif;
+    color: #535561;
+    -webkit-font-feature-settings: "lnum";
+    font-feature-settings: "lnum";
+    font-size: 12px;
+
+    thead {
+      display: table-row-group
+    }
+
+    
+    table, th, td {
+      border-collapse: collapse;
+    }
+    
+
+    .item-tbl-print{
+      font-size: 10px;
+    }
+  }
+
+
+  h1{
+    font-weight: 400;
+    font-size: 13px;
+  }
+
+}

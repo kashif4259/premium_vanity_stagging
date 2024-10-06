@@ -30,7 +30,7 @@
                                                   buttonText="export"
                                                   v-on:submit="exportStatus"/>
                         </div> -->
-                        <!-- <div class="py-1 pl-1 pr-0">
+                        <div class="py-1 pl-1 pr-0">
                             <button type="button"
                                     class="btn btn-primary app-color dropdown-toggle"
                                     data-toggle="dropdown">
@@ -42,24 +42,24 @@
                                    @click="openModal('product')">
                                     {{ trans('lang.import_product') }}
                                 </a>
-                                <a class="dropdown-item drop-down-list"
+                                <!-- <a class="dropdown-item drop-down-list"
                                    data-toggle="modal"
                                    @click="openModal('stock')">
                                     {{ trans('lang.import_opening_stock') }}
-                                </a>
+                                </a> -->
                                 <a class="dropdown-item drop-down-list"
                                    data-toggle="modal"
                                    @click="openAdjustStockModal">
                                     {{ trans('lang.stock_adjustment') }}
                                 </a>
-                                <a v-if="isPrintBarcode"
+                                <!-- <a v-if="isPrintBarcode"
                                    class="dropdown-item drop-down-list"
                                    data-toggle="modal"
                                    @click.prevent="openBarcodeModal()">
                                     {{ trans('lang.print_barcode') }}
-                                </a>
+                                </a> -->
                             </div>
-                        </div> -->
+                        </div>
                     </div>
                 </div>
             </div>

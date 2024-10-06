@@ -1,5 +1,5 @@
 <template id="order-packing-slip">
-    <div>
+    <div class="main-containter" style="height:100%">
         <div class="modal-layout-content" id="printMe" >
             <div class="row">
                 <div class="col-md-6">
@@ -15,8 +15,8 @@
             </div>
             
             <pre-loader v-if="!hideEditSalesDatePreloader"/>
-            <div v-else class="row mx-0 modal-content-row">
-                <div class="row">
+            <div v-else class="">
+                <div class="row order-print-main">
                     <div class="col-md-12">
                         <table width="80%"  align="center" style="width: 80%; margin: auto;">
                             <tbody>
@@ -30,18 +30,18 @@
                                                     </td>
                                                     <td style="vertical-align:top">
                                                         <p>
-                                                            <b>Noble Vanity & More</b>
+                                                            <b>Premium Vanity & Flooring</b>
                                                         </p>
                                                         <p>
-                                                            5805 Kennedy Rd
+                                                            1620 Midland Ave
                                                         </p>
                                                         <p>
-                                                            Mississauga ON L4Z 2G3
+                                                            Scarborough
                                                         </p>
                                                         <p>
-                                                            (905) 890 1900
+                                                            416-800-0875
                                                         </p>
-                                                        <p>
+                                                        <!-- <p>
                                                             info@noblevanity.ca
                                                         </p>
                                                         <p>
@@ -49,7 +49,7 @@
                                                         </p>
                                                         <p>
                                                             GST/HST Registration No.: 803470525
-                                                        </p>
+                                                        </p> -->
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -85,7 +85,26 @@
                                                 <tr>
                                                     <td>{{ order.header_info.customer }}</td>
                                                     <td>&nbsp;</td>
-                                                    <td align="right"><b>DATE </b>{{ order.header_info.date }}</td>
+                                                    <td align="right"><b>DATE: </b>{{ order.header_info.date }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>Deilivery Type</b></td>
+                                                    <td>&nbsp;</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{{ order.header_info.delivery_or_pickup }}</td>
+                                                    <td>&nbsp;</td>
+                                                    <td align="right"><b>Pickup/Deliver DATE: </b>{{ order.header_info.delivery_or_pickup_date }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><b>Customer Type</b></td>
+                                                    <td>&nbsp;</td>
+                                                    <td align="right"><b>Received By: </b>{{ order.header_info.received_by}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{{ order.header_info.customer_type }}</td>
+                                                    <td>&nbsp;</td>
+                                                    <td>&nbsp;</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -105,11 +124,12 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <table width="100%">
+                                        <table width="100%" style="border-spacing: 10px;">
                                             <thead style="background-color: #a3d0e4; color: #2DABE1;">
                                                 <tr>
                                                     <th align="left">DATE</th>
                                                     <th align="left">DESCRIPTION</th>
+                                                    <th align="left">Notes</th>
                                                     <th align="left">QTY</th>
                                                 </tr>
                                             </thead>
@@ -118,17 +138,17 @@
                                                     <td>&nbsp;</td>
                                                 </tr>
                                                 <tr v-for="(item, index) in order.order_items" :key="index">
-                                                    <td style="vertical-align:top;">{{ item.date }}</td>
-                                                    <td>
+                                                    <td width="10%" style="vertical-align:top; padding: 10px;">{{ item.date }}</td>
+                                                    <td width="20%" style="padding: 10px;">
                                                         <p>{{ item.title }}</p>
                                                         <ul>
-                                                            <li v-for="(variation, i) in item.product_variations" :key="i">
-                                                                <span v-if="i == 'hole' && variation != '' ">
+                                                            <li v-for="(variation, i) in item.product_variations" :key="i" v-if=" !['size','hole','color'].includes(i)">
+                                                                <!-- <span v-if="i == 'hole' && variation != '' ">
                                                                     Hole: {{ variation }}
-                                                                </span>
-                                                                <span v-if="i == 'size' && variation != '' ">
+                                                                </span> -->
+                                                                <!-- <span v-if="i == 'size' && variation != '' ">
                                                                     Dimensions: {{ variation }}
-                                                                </span>
+                                                                </span> -->
                                                                 <span v-if="i == 'drawer_side' && variation != ''  ">
                                                                     DRAWERS SIDE: {{ variation }}
                                                                 </span>
@@ -141,61 +161,24 @@
                                                                 <span v-if="i == 'filler' && variation != '' ">
                                                                     FILLER:: {{ variation }}
                                                                 </span>
-                                                                <span v-if="i == 'color' && variation != '' ">
+                                                                <!-- <span v-if="i == 'color' && variation != '' ">
                                                                     COLOR: {{ variation }}
-                                                                </span>
+                                                                </span> -->
                                                             </li> 
                                                         </ul>
                                                     </td>
-                                                    <td style="vertical-align:top;">{{ item.item_purchased }}</td>
+                                                    <td width="40%" style="vertical-align:top; padding: 10px;">{{ item.note }}</td>
+                                                    <td width="10%" style="vertical-align:top; padding: 10px;">{{ item.item_purchased }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </td>
                                 </tr>
+                                
                                 <tr>
                                     <td>&nbsp;</td>
                                 </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <hr />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <p>To make any changes in your order please email at info@noblevanity.ca</p>
-                                        <p>Refund Policy: 15% Restocking Fee will apply on all returned products after they are picked up and 7% cancelled charges will apply if</p>
-                                        <p>order cancelled before pickup. No return after 30 Days.</p>
-                                        <p>-Please check products condition before pick up. Noble Vanity & More is not liable for any product damage after pick up or delivery.</p>
-                                    </td>
-                                </tr>
+                               
                             </tbody>
                         </table>                           
                     </div>
@@ -210,17 +193,6 @@
                     </div>
                 </div>
             </div>
-            <!-- <div class="row mx-0 modal-content-row">
-                    <div class="col-md-12">
-                        <hr class="custom-margin"/>
-                        <span class="">
-                            <button class="btn btn-block app-color payment-button"
-                                    @click.prevent="updateSalesDate()">
-                                {{ trans('lang.save') }}
-                            </button>
-                        </span>
-                    </div>
-                </div> -->
         </div>
     </div>
 </template>
@@ -248,9 +220,10 @@
                     maxWidth: '',
                     scanStyles: false,
                     css: [
-                        AppFunction.getAppUrl('css/app.css')
+                        AppFunction.getAppUrl('css/invoice.css')
                     ],
-                    style: 'body  { visibility: hidden; } #printMe {visibility: visible; border: none; }'
+                    style: 'body  { visibility: hidden; } #printMe {visibility: visible; border: none; max-height:100%; overflow: visible } .payment-button {display: none}',
+                    targetStyle: ["max-height"]
                 }
                 
                 
@@ -268,6 +241,7 @@
             $("#generate-packing-slip-modal").on("hidden.bs.modal", function (e) {
                 instance.$emit("emitForGeneratePackingSlip", false);
             });
+            //generate-invoice-modal
             
         },
 
@@ -320,7 +294,7 @@
     };
 </script>
 
-
+<!-- 
 <style type="text/css">
 
 hr{
@@ -335,4 +309,25 @@ hr{
   visibility: visible; border: none; 
   }
 }
+</style> -->
+
+
+<style type="text/css">
+
+hr{
+        background-color: #212F47; height: 1px; border: 0;
+    }
+    
+    @media print { 
+     .payment-button{
+     display:none;
+     }
+  body * { 
+  visibility: hidden !important; 
+  } 
+  #printMe, #printMe * { 
+  visibility: visible; border: none !important; 
+  }
+}
+
 </style>

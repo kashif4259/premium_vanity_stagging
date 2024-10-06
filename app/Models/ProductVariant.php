@@ -198,57 +198,64 @@ class ProductVariant extends BaseModel
 
     public static function productAlreadyExisted($sku, $barCode, $title, $productType)
     {
-        $joinedTable = ProductVariant::select('product_variants.product_id as productId', 'product_variants.id as variantId', 'product_variants.purchase_price as purchase_price', 'product_variants.selling_price as selling_price', 'products.title as title')
-            ->leftJoin('products', 'products.id', '=', 'product_variants.product_id');
+        return $joinedTable = Product::select( 'products.title as title')->whereRaw('LOWER(`products`.`title`) = ? ',[strtolower($title)])->count();
+        
+        
+            // $count = $joinedTable->Where('products.title', $title)->get();
+            // dd($count);
+            // return $count;
+        
 
-        if ($sku != null) {
-            $count = $joinedTable->where('product_variants.sku', $sku)->count();
-            if ($count == 0) {
-                if ($barCode != null) {
-                    $count = $joinedTable->orWhere('product_variants.bar_code', $barCode)->count();
-                    if ($count == 0) {
-                        if ($productType == 'standard') {
-                            $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
-                            return $count;
-                        } else {
-                            return $count;
-                        }
-                    } else {
-                        return $count;
-                    }
-                } else {
-                    if ($productType == 'standard') {
-                        $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
-                        return $count;
-                    } else {
-                        return $count;
-                    }
-                }
-            } else {
-                return $count;
-            }
-        } else {
-            if ($barCode != null) {
-                $count = $joinedTable->where('product_variants.bar_code', $barCode)->count();
-                if ($count == 0) {
-                    if ($productType == 'standard') {
-                        $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
-                        return $count;
-                    } else {
-                        return $count;
-                    }
-                } else {
-                    return $count;
-                }
-            } else {
-                if ($productType == 'standard') {
-                    $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
-                    return $count;
-                } else {
-                    return 0;
-                }
-            }
-        }
+
+        // if ($sku != null) {
+        //     $count = $joinedTable->where('product_variants.sku', $sku)->count();
+            
+        //     if ($count == 0) {
+        //         if ($barCode != null) {
+        //             $count = $joinedTable->orWhere('product_variants.bar_code', $barCode)->count();
+        //             if ($count == 0) {
+        //                 if ($productType == 'standard') {
+        //                     $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
+        //                     return $count;
+        //                 } else {
+        //                     return $count;
+        //                 }
+        //             } else {
+        //                 return $count;
+        //             }
+        //         } else {
+        //             if ($productType == 'standard') {
+        //                 $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
+        //                 return $count;
+        //             } else {
+        //                 return $count;
+        //             }
+        //         }
+        //     } else {
+        //         return $count;
+        //     }
+        // } else {
+        //     if ($barCode != null) {
+        //         $count = $joinedTable->where('product_variants.bar_code', $barCode)->count();
+        //         if ($count == 0) {
+        //             if ($productType == 'standard') {
+        //                 $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
+        //                 return $count;
+        //             } else {
+        //                 return $count;
+        //             }
+        //         } else {
+        //             return $count;
+        //         }
+        //     } else {
+        //         if ($productType == 'standard') {
+        //             $count = $joinedTable->orWhere('products.title', $title)->where('products.product_type', '=', 'standard')->count();
+        //             return $count;
+        //         } else {
+        //             return 0;
+        //         }
+        //     }
+        // }
     }
 
     public static function getSpecificColumn($column)

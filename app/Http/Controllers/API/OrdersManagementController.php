@@ -33,6 +33,8 @@ use App\Models\SmsTemplate;
 use App\Models\ShippingInformation;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\OrderItemLog;
+use App\Models\OrderLog;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
@@ -40,7 +42,10 @@ use Illuminate\Support\Facades\Storage;
 use PDF;
 use Config;
 use Database\Seeders\OrderTableSeeder;
+use Faker\Provider\ar_SA\Payment;
 use Milon\Barcode\DNS1D;
+use Illuminate\Support\Arr;
+
 
 class OrdersManagementController extends Controller
 {
@@ -1505,8 +1510,12 @@ class OrdersManagementController extends Controller
         $arrayCount = 0;
         $netDiscount = 0;
         $netDueAmount = 0;
+        $days = 0;
 
-        foreach ($dueData as $rowData) {
+        foreach ($dueData as &$rowData) {
+
+            $order_count = OrderLog::orderCountByOrderInvoiceId($rowData->invoice_id);
+
             if ($rowData->type == 'customer') {
                 $rowData->type = Lang::get('lang.customer');
             } else {
@@ -1538,6 +1547,23 @@ class OrdersManagementController extends Controller
             {
                 $rowData->pickup_date = (isset($rowData->delivery_or_pickup_date) ? $rowData->delivery_or_pickup_date : '');
             }
+
+            if(isset($rowData->delivery_or_pickup_date) && !empty($rowData->delivery_or_pickup_date))
+            {
+                $orderDate = $rowData->delivery_or_pickup_date;
+                
+                $origin = new \DateTimeImmutable(date('Y-m-d'));
+
+                $target = new \DateTimeImmutable($orderDate);
+
+                $interval = $origin->diff($target);
+
+                $days = $interval->format('%R%a days');
+                
+                $rowData->days = $days;
+            }
+
+            $rowData->invoice_id_with_count = $rowData->invoice_id.'_'.$order_count;
         }
 
         return [
@@ -1590,9 +1616,9 @@ class OrdersManagementController extends Controller
             $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
         }
 
-        if ($orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
+        if (isset($orderDetails->customer) && $orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
 
-        if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+        // if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
 
         return ['orderDetails' => $orderDetails];
         
@@ -1608,7 +1634,7 @@ class OrdersManagementController extends Controller
         }
 
         return ['datarows' => [
-            $orderDetails->product_variations
+            $orderDetails->product_variations ?? []
         ]];
     }
 
@@ -1642,6 +1668,49 @@ class OrdersManagementController extends Controller
         return $returndata;
     }
 
+    public function getInvoiceDetails($id)
+    {
+        $orderItmes = OrderItems::getOrderItmesByIdForInvoice($id);
+        
+        foreach($orderItmes as &$orderDetails)
+        {
+            if(isset($orderDetails->product_custom_details) && !empty($orderDetails->product_custom_details))
+            {          
+                $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
+            }
+    
+            // if ($orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
+    
+            if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+
+            $no_item_purchases = OrderItems::getItemDiscountAndItemPurchased($orderDetails->id);
+
+            $orderDetails->discount = $no_item_purchases->discount;
+
+            $orderDetails->item_purchased = $no_item_purchases->item_purchased;
+        }
+        
+        $returndata = [
+            'order_items' => $orderItmes,
+            'header_info' => Order::getInvoiceDetailsHeaderInfo($id),
+            'order_footer' => Order::getInvoiceDetailsFooterInfo($id)
+        ];
+
+        return $returndata;
+    }
+
+    public function getPaymentsHistory($id)
+    {
+        $payments = Payments::paymentReportListForOrdersManagementSystem($id);
+
+        $returndata = [
+            'header_info' => Order::getInvoiceDetailsHeaderInfo($id),
+            'payments' => $payments
+        ];
+
+        return $returndata;
+    }
+
     public function updateOrderStatus(Request $request, $id)
     {
         $getOrderDetailsById = Order::getOne($id);
@@ -1667,5 +1736,747 @@ class OrdersManagementController extends Controller
         }
 
         return $getOrderDetailsById->refresh();
+    }
+
+    public function editOrder($id)
+    {
+        $getOrderDetails = Order::getOrderDetailsForUpdate($id);
+        
+        if(!$getOrderDetails)
+        {
+            return redirect()->route('orders.management');
+        }
+
+        $allSettings = new AllSettingFormat;
+        $BranchController = new BranchController;
+        $getBranch = $BranchController->index();
+        $totalBranch = sizeof($getBranch);
+
+        $paymentTypes = $this->paymentController->getData();
+        
+        $autoInvoice = $this->paymentController->getAutoInvoice();
+        $customer = Customer::getCustomerDetails();
+
+        $customerGroup = CustomerGroup::allData();
+        $cashRegisterID = $this->getCashRegisterID();
+        $salesReturnStatus = Setting::getSettingValue('sales_return_status')->setting_value;
+        $salesType = Setting::getSaleOrReceivingType('sales_type');
+        $invoiceData = $this->invoiceData();
+        $userID = auth()->id();
+        $currentBranch = Setting::currentBranch($userID);
+        $holdOrders = $this->getHoldOrder();
+        $restaurantTables = RestaurantTable::all();
+
+        $defaultInvoiceTemplate = InvoiceTemplate::getDefaultTemplate();
+        $bookedTables = Order::getBookedTables();
+
+        // $orderDetailsWithoutCartInfo = json_decode($getOrderDetails, true);
+        $cartInfo = $getOrderDetails->cart_info;
+        
+        Arr::except($getOrderDetails, ['cart_info']);
+
+        $orderCustomer = Customer::customerDetails($getOrderDetails->customer_id);
+        
+        $getOrderDetails["order_customer"] = $orderCustomer->toArray();
+
+        $getOldPaymentDetails = Payments::paymentDetailsForUpdateOrder($id);
+        
+        foreach($getOldPaymentDetails as &$payment)
+        {
+            $payment['options'] = [];
+            $payment['exchange'] = 0;
+        }
+        // dump($getOldPaymentDetails);die;
+        
+        $output = [
+            'currentBranch' => $allSettings->getCurrentBranch(),
+            'totalBranch' => $totalBranch,
+            'currentCashRegister' => $cashRegisterID,
+            'salesReturnStatus' => $salesReturnStatus,
+            'salesType' => $salesType,
+            'branches' => $getBranch,
+            'autoInvoice' => $autoInvoice['autoInvoice'],
+            'paymentTypes' => $paymentTypes,
+            'customer' => $customer,
+            'customerGroup' => $customerGroup,
+            'invoicePrefix' => $invoiceData['prefix'],
+            'invoiceSuffix' => $invoiceData['suffix'],
+            'lastInvoiceNum' => $invoiceData['lastInvoiceNum'],
+            'appName' => '',
+            'isBranchSelected' => false,
+            'product' => null,
+            'shortcutKeyCollection' => null,
+            'holdOrders' => $holdOrders,
+            'defaultInvoiceTemplateForSales' => $defaultInvoiceTemplate['sales_invoice']['invoice_template'],
+            'restaurantTables' => $restaurantTables,
+            'bookedTables' => $bookedTables,
+            'editOrder' => $getOrderDetails,
+            'cartInfo' => $cartInfo,
+            'getOldPaymentDetails' => $getOldPaymentDetails
+        ];
+
+        if ($currentBranch != null) {
+//            $product = $this->getProduct('sales', $currentBranch->setting_value);
+            $output['isBranchSelected'] = true;
+//            $output['product'] = null;
+//            $output['shortcutKeyCollection'] = $product['shortcutKeyCollection'];
+        }
+
+        return view('sales.UpdateOrder', $output);
+    }
+
+    public function updateOrder($oldOrderID, Request $request)
+    {
+        $requested_id = collect($request->cart)->pluck('productID');
+        $cashRegister = $request->cashRagisterId;
+        $allSettings = new AllSettingFormat;
+        $userId = Auth::id();
+        $userBranchId = Setting::getFirst('*', 'user_id', $userId)->setting_value;
+        $date = Carbon::now()->toDateString();
+        $orderType = $request->orderType;
+        $salesOrReceivingType = $request->salesOrReceivingType;
+        $orderStatus = $request->status;
+        $createdBy = Auth::user()->id;
+        $carts = $request->cart;
+        $id = $request->customer ? $request->customer['id'] : null;
+        $subTotal = $request->subTotal;
+        $tax = $request->tax;
+        $allDiscount = $request->discount; //percentage discount on entire sell
+        $grandTotal = $request->grandTotal;
+        $payment = $request->payments;
+        $orderID = $request->orderID;
+        $orderIdInternalTransfer = $request->orderIdInternalTransfer;
+        $transferBranch = $request->transferBranch;
+        $transferBranchName = $request->transferBranchName;
+        $dueAmount = 0;
+        $time = $request->time;
+        $restaurantTableId = $request->tableId;
+        $variantTitle = '';
+        $message = [];
+        $orderData1 = [];
+        $allOrderData1 = [];
+        $totalProductInThisInvoice = 0;
+        $totalReturnedProduct = 0;
+        $totalCartProduct = 0;
+        $returnProductProfit = 0;
+
+        //get old order and order items
+        
+        $getOldOrderInformation = $this->getOldOrderInformation($oldOrderID);
+        
+        $id = $getOldOrderInformation['customer_id'];
+        
+        $getOldOrderItemInformation = $this->getOldOrderItemsInformation($oldOrderID);
+
+        // dd($getOldOrderInformation, $getOldOrderItemInformation);
+        
+        
+        /*Section for Return Order product in cart*/
+        if ($request->salesOrReturnType == 'returns') {
+            $orderItemProductCount = 0;
+            //checking cart with discount
+            foreach ($carts as $cart) if ($cart['orderType'] == 'sales') $orderItemProductCount++;
+
+            $salingProfit = Order::getFirst(['id', 'profit'], 'invoice_id', $request->cart[0]['invoiceReturnId']);
+
+            $returnInvoiceProfit = Order::getReturnProductProfit($carts[0]['invoiceReturnId']);
+
+            if ($returnInvoiceProfit->profit == null) $returnInvoiceProfit->profit = 0;
+
+            $productsSoldFirstCount = OrderItems::countRecord('order_id', $salingProfit->id);
+        }
+        /*Section for Return Order product in cart ends*/
+
+        $totalCartProduct = (collect($carts)->sum('quantity')) * (-1);
+
+
+        if ($grandTotal < 0) {
+
+            $orderDetailsInformation = Order::getOrderInformation($carts[0]['invoiceReturnId'], $orderType);
+
+            if (count($orderDetailsInformation) > 0) $returnProductProfit = $orderDetailsInformation[0]->profit; //checking profit while return product
+
+            $totalProductInThisInvoice = (collect($orderDetailsInformation)->sum('quantity')) * (-1);
+
+            $diffQuantity = $orderDetailsInformation
+                ->whereIn('product_id', $requested_id)
+                ->filter(function ($order_item) use ($request) {
+                    $item = collect($request->cart)->first(function ($item) use ($order_item) {
+                        return $item["productID"] == $order_item->product_id;
+                    });
+                    $order_item->quantity_difference = $item["quantity"] - $order_item->quantity;
+                    return $item["quantity"] > $order_item->quantity;
+                });
+
+            $orderData1 = $orderDetailsInformation->whereNotIn('product_id', $requested_id);
+            $allOrderData1 = collect($orderData1)->merge($diffQuantity)->map(function ($order) {
+                $item["product_id"] = $order->product_id;
+                $item["variant_id"] = $order->variant_id;
+                if ($item["quantity"] = $order->quantity_difference == null) {
+                    $item["quantity"] = $order->quantity * -1;
+                } else {
+                    $item["quantity"] = $order->quantity_difference;
+                }
+                return $item;
+            });
+        }
+
+
+        $outOfStock = Setting::getSettingValue('out_of_stock_products')->setting_value;
+        $checkAvailableQuantity = 'false';
+        
+        foreach ($request->cart as $cart) {
+            if($cart['orderType'] != 'delivery')
+            {
+                $availableQuantityCheck = OrderItems::checkAvailableQuantityForUpdate($cart['variantID'], $oldOrderID);
+                
+                if ($cart['orderType'] !== 'discount') {
+                    $outOfStockVariantTitle = $cart['variantTitle'] ? ' (' . $cart['variantTitle'] . ') ' : ' ' . $cart['variantTitle'] . ' ';
+                    if ($outOfStock == 1 && $request->orderType == 'sales' && $request->status == 'done' && $cart['quantity'] > $availableQuantityCheck && $cart['quantity'] > 0) {
+                        $checkAvailableQuantity = 'true';
+                        if ($availableQuantityCheck <= 0) {
+                            array_push($message, $cart['productTitle'] . $outOfStockVariantTitle . trans('lang.is_out_of_stock') . ' ' . trans('lang.please_remove_from_cart'));
+                        } else {
+                            array_push($message, $cart['productTitle'] . $outOfStockVariantTitle . trans('lang.is_out_of_stock') . ' ' . trans('lang.available_quantity') . '' . $availableQuantityCheck . '.');
+                        }
+                    }
+                }
+
+
+                if ($orderType == 'receiving'
+                    || $salesOrReceivingType == 'internal'
+                    || $salesOrReceivingType == 'internal-transfer') {
+                    $this->updateVariantPurchasePrice($cart);
+                } else {
+                    $this->updateVariantSalesPrice($cart);
+                }
+            }
+        }
+
+        if ($checkAvailableQuantity == 'true') {
+
+            $response = [
+                'checkAvailableQuantity' => $checkAvailableQuantity,
+                'message' => $message
+            ];
+            return response()->json($response, 200);
+        }
+        $lastInvoiceNumber = Setting::getSettingValue('last_invoice_number')->setting_value;
+        $purchaseLastInvoiceNumber = Setting::getSettingValue('purchase_last_invoice_number')->setting_value;
+
+        $profit = $request->profit == null ? 0 : $request->profit;
+
+        $invoiceFixes = $allSettings->getInvoiceFixes();
+
+        if ($allSettings->getCurrentBranch()->is_cash_register == 1) {
+            $cashRegisterID = $this->getCashRegisterID()->id;
+        } else {
+            $cashRegisterID = null;
+        }
+
+        if ($allDiscount == null) {
+            $allDiscount = 0;
+        }
+
+        if (!empty($payment)) {
+            foreach ($payment as $key => $value) {
+                if ($value['paymentType'] == 'credit') {
+                    $dueAmount = floatval($value['paid']);
+                }
+            }
+        }
+        $cartSaveIntoDb = json_encode($carts);
+        
+        if (($orderStatus == 'done' && !$orderID) || ($orderStatus == 'pending' && !$orderID) || ($orderStatus == 'hold' && !$orderID)) {
+            
+            $orderData = array();
+            $orderData['date'] = $date;
+            $orderData['sales_note'] = $request->salesNote;
+            $orderData['all_discount'] = $allDiscount;
+            $orderData['sub_total'] = $subTotal;
+            $orderData['total_tax'] = $tax;
+            $orderData['due_amount'] = $dueAmount;
+            $orderData['total'] = $grandTotal;
+            $orderData['type'] = $salesOrReceivingType;
+            $orderData['profit'] = $profit;
+            $orderData['status'] = $orderStatus;
+            $orderData['table_id'] = $restaurantTableId;
+            $orderData['delivery_or_pickup'] = $request->deliveryOrPickup;
+            $orderData['delivery_or_pickup_date'] = $request->deliveryOrPickupDate;
+            $orderData['delivery_charges'] = $request->deliveryCharges;
+            $orderData['order_status'] = $getOldOrderInformation['order_status'];
+            $orderData['cart_info'] = $cartSaveIntoDb;
+            $orderData['cart_info'] = $cartSaveIntoDb;
+            if($request->input('taxPercentage') == 0)
+            {
+                $orderData['tax_percentage'] = $getOldOrderInformation['tax_percentage']; 
+            }
+            else
+            {
+                $orderData['tax_percentage'] = $request->input('taxPercentage'); 
+            }
+            
+            if ($orderData['total'] >= 0 || $salesOrReceivingType == "internal-transfer") {
+                $orderData['order_type'] = $orderType;
+            } else {
+                //return product section
+
+                $getReturnProduct = Order::getReturnProduct($carts[0]['invoiceReturnId'], $orderType);
+
+                $totalReturnedProduct = collect($getReturnProduct)->sum('quantity');
+
+                if (count($allOrderData1) > 0) {
+                    if ($orderType == 'receiving') {
+                        $totalProductInThisInvoice = $totalProductInThisInvoice * -1;
+                    }
+                    if ($totalProductInThisInvoice - $totalReturnedProduct == $totalCartProduct) {
+                        $returnType = 'fully';
+                    } else {
+                        $returnType = 'partial';
+                    }
+                } else {
+                    $returnType = 'fully';
+                }
+
+                $orderData['order_type'] = $orderType;
+
+                $orderData['type'] = $salesOrReceivingType;
+                $orderData['returned_invoice'] = $carts[0]['invoiceReturnId'];
+
+                /*profit calculation for return product*/
+                if ($request->salesOrReturnType == 'returns') {
+                    if ($returnType == 'fully') {
+                        $orderData['profit'] = ($returnProductProfit - $returnInvoiceProfit->profit) * (-1);
+                    } else {
+                        $availableProfit = $salingProfit->profit - $returnInvoiceProfit->profit;
+                        $orderData['profit'] = $availableProfit / $productsSoldFirstCount * (-1);
+                    }
+                } else {
+                    //for purchase return
+                    $orderData['profit'] = 0;
+                }
+            }
+
+            if ($salesOrReceivingType == 'internal' || $salesOrReceivingType == 'internal-transfer') {
+                $orderData['transfer_branch_id'] = $transferBranch;
+            }
+
+            $orderType === 'sales' ? $orderData['customer_id'] = $id : $orderData['supplier_id'] = $id;
+
+            $orderData['created_by'] = $createdBy;
+            $orderData['branch_id'] = $userBranchId;
+            if(isset($request->salesProductVariations) && !empty($request->salesProductVariations))
+            {
+                $orderData['product_custom_details'] = json_encode($request->salesProductVariations, true);
+            }
+            $orderData['created_at'] = Carbon::parse($time);
+
+            if ($orderData['table_id']) {
+                RestaurantTable::updateTableStatus($orderData['table_id'], 'booked');
+            }
+
+            $orderLastId = Order::store($orderData);
+
+
+            if ($salesOrReceivingType == 'internal-transfer') {
+                $orderIdInternalTransfer = $this->insertInternalTransfer($orderData, $transferBranch, $userBranchId, $invoiceFixes, $purchaseLastInvoiceNumber);
+            }
+
+            if ($orderLastId->total < 0 && $orderLastId->status == 'done') {
+                Order::updateOrderType($carts[0]['invoiceReturnId'], $returnType, $orderType);
+            }
+
+
+            if ($request->shippingAreaId != null && $orderStatus == 'done') {
+                $setShippingInfo = $this->storeShippingInformation($request, $orderLastId->id);
+            }
+
+            $orderID = $orderLastId->id;
+
+            if ($orderLastId->order_type == 'sales') {
+                Order::updateData($orderID, ['invoice_id' => $getOldOrderInformation['invoice_id']]);
+                $lastInvoiceNumber += 1;
+
+                $lastUpdatedInvoice = Setting::where('setting_name', 'last_invoice_number')->first()->setting_value;
+                if ($lastInvoiceNumber > $lastUpdatedInvoice) {
+                    Setting::updateSetting('last_invoice_number', $lastInvoiceNumber);
+                }
+            } else {
+                Order::updateData($orderID, ['invoice_id' => $getOldOrderInformation['invoice_id']]);
+                $purchaseLastInvoiceNumber += 1;
+
+                $purchaseLastUpdatedInvoice = Setting::where('setting_name', 'purchase_last_invoice_number')->first()->setting_value;
+                if ($purchaseLastInvoiceNumber > $purchaseLastUpdatedInvoice) {
+                    Setting::updateSetting('purchase_last_invoice_number', $purchaseLastInvoiceNumber);
+                }
+            }
+
+        } else {
+            $orders = array();
+            $orders['date'] = $date;
+            $orders['sales_note'] = $request->salesNote;
+            $orders['order_type'] = $orderType;
+            $orders['all_discount'] = $allDiscount;
+            $orders['sub_total'] = $subTotal;
+            $orders['total_tax'] = $tax;
+            $orders['total'] = $grandTotal;
+            $orders['type'] = $salesOrReceivingType;
+            $orders['status'] = $orderStatus;
+            $orders['table_id'] = $restaurantTableId;
+            $orders['due_amount'] = $dueAmount;
+            $orders['delivery_or_pickup'] = $request->deliveryOrPickup;
+            $orders['delivery_or_pickup_date'] = $request->deliveryOrPickupDate;
+            $orders['delivery_charges'] = $request->deliveryCharges;
+            $orderData['order_status'] = $getOldOrderInformation['order_status'];
+            $orderData['cart_info'] = $cartSaveIntoDb;
+
+            if ($orders['total'] < 0) {
+                $getReturnProduct = Order::getReturnProduct($carts[0]['invoiceReturnId'], $orderType);
+                $totalReturnedProduct = collect($getReturnProduct)->sum('quantity');
+
+                if ($orderType == 'receiving') {
+                    $totalProductInThisInvoice = $totalProductInThisInvoice * -1;
+                }
+
+                Order::updateOrderType(
+                    $carts[0]['invoiceReturnId'],
+                    $totalProductInThisInvoice - $totalReturnedProduct == $totalCartProduct ? 'fully' : 'partial',
+                    $orderType
+                );
+
+                $orders['order_type'] = $orderType;
+            }
+
+            if ($salesOrReceivingType == 'internal') {
+                $orders['transfer_branch_id'] = $transferBranch;
+            }
+
+
+            $orderType == 'sales' ? $orders['customer_id'] = $id : $orders['supplier_id'] = $id;
+
+            $orders['created_by'] = $createdBy;
+
+            if ($orders['table_id']) {
+                RestaurantTable::updateTableStatus($orders['table_id'], 'available');
+            }
+
+            Order::updateData($request->orderID, $orders);
+
+            if ($request->shippingAreaId != null && $orderStatus == 'done') {
+                $setShippingInfo = $this->storeShippingInformation($request, $request->orderID);
+            }
+            if ($salesOrReceivingType == 'internal-transfer') {
+                $orders['order_type'] = 'receiving';
+                Order::updateData($request->orderIdInternalTransfer, $orders);
+            }
+        }
+        $orderItems = [];
+        $orderItemsInternalTransfer = [];
+
+        foreach ($carts as $cart) {
+            $orderType == 'sales' ? $quantity = -$cart['quantity'] : $quantity = $cart['quantity'];
+
+            if (!array_key_exists('discount', $cart) || $cart['discount'] == null) {
+                $cart['discount'] = 0;
+            }
+
+            array_push($orderItems, [
+                'product_id' => $cart['productID'],
+                'variant_id' => $cart['variantID'],
+                'type' => $cart['orderType'],
+                'quantity' => $quantity,
+                'price' => $cart['price'],
+                'discount' => $cart['discount'],
+                'sub_total' => $cart["calculatedPrice"],
+                'tax_id' => $cart['taxID'],
+                'order_id' => $orderID,
+                'note' => $cart['cartItemNote'],
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // for update isNotify product_variant
+            if (isset($cart['variantID'])) {
+                ProductVariant::removeBranchFromIsNotify($cart['variantID'], $request->branchId);
+            }
+
+            if ($salesOrReceivingType == 'internal-transfer') {
+                $quantity = $cart['quantity'];
+                array_push($orderItemsInternalTransfer, [
+                    'product_id' => $cart['productID'],
+                    'variant_id' => $cart['variantID'],
+                    'type' => 'receiving',
+                    'quantity' => $quantity,
+                    'price' => $cart['price'],
+                    'discount' => $cart['discount'],
+                    'sub_total' => $cart["calculatedPrice"],
+                    'tax_id' => $cart['taxID'],
+                    'order_id' => $orderIdInternalTransfer,
+                    'note' => $cart['cartItemNote'],
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+        }
+
+        if ($orderStatus != 'hold') {
+            if (sizeof($payment) > 0) {
+                $paymentArray = [];
+                $paymentArrayInternal = [];
+                $getAdvanceFromOldOrder = $getOldOrderInformation['total'] - $getOldOrderInformation['due_amount'];
+                $getpaymentolddata = Payments::where('order_id', $getOldOrderInformation['id'])->first();
+                // print_r($getAdvanceFromOldOrder);
+                foreach ($payment as $rowPayment) {
+                    // print_r($rowPayment['paid']);
+                    array_push($paymentArray, 
+                    [
+                        'date' => $date, 
+                        'paid' => ($rowPayment['paid'] == $getAdvanceFromOldOrder ? $getAdvanceFromOldOrder : $rowPayment['paid']-$getAdvanceFromOldOrder), 
+                        'exchange' => $rowPayment['exchange'], 
+                        'payment_method' => $getpaymentolddata['payment_method'], 
+                        'options' => serialize($rowPayment['options']), 
+                        'order_id' => $orderID, 
+                        'cash_register_id' => $cashRegisterID, 
+                        'is_active' => $rowPayment['is_active'], 
+                        'created_at' => $rowPayment['PaymentTime']
+                    ]);
+
+                    Order::where('id',$orderID)->update([
+                        'due_amount' => ($rowPayment['paid']-$getAdvanceFromOldOrder)
+                    ]);
+
+                    // dd($paymentArray, $getAdvanceFromOldOrder);
+                }
+                foreach ($payment as $rowPayment) {
+                    array_push($paymentArrayInternal, ['date' => $date, 'paid' => $rowPayment['paid'], 'exchange' => $rowPayment['exchange'], 'payment_method' => $rowPayment['paymentID'], 'options' => serialize($rowPayment['options']), 'order_id' => $orderIdInternalTransfer, 'cash_register_id' => $cashRegisterID, 'is_active' => $rowPayment['is_active'], 'created_at' => $rowPayment['PaymentTime']]);
+                }
+
+                
+                // $oldDuePayments = Payments::where('order_id', $oldOrderID)->get();
+
+                // if(!$oldDuePayments->isEmpty())
+                // {
+                //     foreach($oldDuePayments as $rowPayment)
+                //     {
+                //         array_push($paymentArray, 
+                //         [
+                //             'date' => $rowPayment['date'], 
+                //             'paid' => $rowPayment['paid'], 
+                //             'exchange' => $rowPayment['exchange'], 
+                //             'payment_method' => $rowPayment['payment_method'], 
+                //             'options' => serialize($rowPayment['options']), 
+                //             'order_id' => $orderID, 
+                //             'cash_register_id' => null, 
+                //             'is_active' => $rowPayment['is_active'], 
+                //             'created_at' => $rowPayment['created_at']
+                //         ]
+                    
+                //         );                        
+                //     }
+                // }
+                // else
+                // {
+                    
+                // }
+                $oldProductCount = Order::select('due_amount')->where('id', $getOldOrderInformation['id'])->first();
+
+                if($oldProductCount['due_amount'] > 0.00)
+                {
+                    array_push($paymentArray, 
+                        [
+                            'date' => $date, 
+                            'paid' => $getAdvanceFromOldOrder, 
+                            'exchange' => $rowPayment['exchange'], 
+                            'payment_method' => $getpaymentolddata['payment_method'], 
+                            'options' => serialize($rowPayment['options']), 
+                            'order_id' => $orderID, 
+                            'cash_register_id' => $cashRegisterID, 
+                            'is_active' => $rowPayment['is_active'], 
+                            'created_at' => $rowPayment['PaymentTime']
+                        ]);
+                }
+
+                if (($orderStatus == 'done' && !$orderID) || ($orderStatus == 'pending' && !$orderID)) {
+                    Payments::insertData($paymentArray);
+                } else {
+                    Payments::deleteRecord('order_id', $request->orderID);
+                    Payments::insertData($paymentArray);
+                    if ($salesOrReceivingType == 'internal-transfer') {
+                        Payments::deleteRecord('order_id', $orderIdInternalTransfer);
+                        Payments::insertData($paymentArrayInternal);
+                    }
+                }
+            }
+        }
+
+        if ($orderType == 'sales') {
+            $invoiceId = $invoiceFixes['prefix'] . $invoiceFixes['lastInvoiceNumber'] . $invoiceFixes['suffix'];
+        } else $invoiceId = $invoiceFixes['purchasePrefix'] . $invoiceFixes['purchaseLastInvoiceNumber'] . $invoiceFixes['purchaseSuffix'];
+
+
+        if (($orderStatus == 'done' && $orderID == null)) {
+            OrderItems::insertData($orderItems);
+            $response = [
+                'invoiceID' => $invoiceId,
+            ];
+            return $response;
+        } else if (($orderStatus == 'pending' && $orderID == null)) {
+
+            OrderItems::insertData($orderItems);
+            $response = [
+                'orderID' => $orderID,
+                'orderIdInternalTransfer' => $orderIdInternalTransfer
+            ];
+
+            return $response;
+
+        } else {
+            OrderItems::deleteRecord('order_id', $request->orderID);
+            OrderItems::insertData($orderItems);
+            if ($salesOrReceivingType == 'internal-transfer') {
+                OrderItems::insertData($orderItemsInternalTransfer);
+            }
+            if ($orderType == 'sales') {
+                $invoiceId = $getOldOrderInformation['invoice_id'];
+                $lastInvoiceId = Setting::getSettingValue('last_invoice_number')->setting_value;
+            } else {
+                $invoiceId = $getOldOrderInformation['invoice_id'];
+                $lastInvoiceId = Setting::getSettingValue('purchase_last_invoice_number')->setting_value;
+            }
+
+
+            
+
+            // Order::where('id', $orderLastId->id)->update([
+            //     'tax_percentage' => $getOldOrderInformation['tax_percentage'],
+            //     'due_amount' => $getOldOrderInformation['due_amount']
+            // ]);
+
+            //old record deleted and add log in logs table 
+            Order::orderUpdated($getOldOrderInformation['id']);
+            $this->insertOrderLog($getOldOrderInformation);
+            $this->insertOrderItemLog($getOldOrderItemInformation);
+            OrderItems::oldItemsDeletedByOrderId($getOldOrderInformation['id']);
+
+            if ($orderStatus == 'done') {
+                // send customer invoice
+                try {
+                    $invoiceTemplateEmail = new InvoiceTemplateController();
+                    $invoiceTemplateData = $invoiceTemplateEmail->getInvoiceTemplateToPrint($orderID, $salesOrReceivingType, $transferBranchName, $cashRegister, $orderType, 'email');
+
+                    $autoEmailReceive = Setting::getSettingValue('auto_email_receive')->setting_value;
+                    $orderDetails = Order::orderDetails($orderID, $cashRegister);
+                    // Sms receive to customer
+                    $autoSmsReceive = Setting::getSettingValue('sms_recive_to_customer')->setting_value;
+
+
+                    if ($orderDetails->customer_id) {
+                        $orderCustomer = Customer::getOne($orderDetails->customer_id);
+
+                        if ($autoSmsReceive == 1 && $orderCustomer->phone_number) {
+
+                            $this->autoCustomerSmsSend($orderCustomer->first_name, $orderCustomer->last_name, $orderCustomer->phone_number, $orderDetails->invoice_id, $orderDetails->total);
+
+                        }
+
+                        if ($autoEmailReceive == 1 && $orderCustomer->email) {
+
+                            $content = EmailTemplate::query()->select('template_subject', 'default_content', 'custom_content')->where('template_type', 'pos_invoice')->first();
+
+                            $subject = $content->template_subject;
+                            $text = $content->custom_content ?  $content->custom_content : $content->default_content;
+
+                            $mailText = str_replace('{first_name}', $orderCustomer->first_name, str_replace('{invoice_id}', $orderDetails->invoice_id, str_replace('{app_name}', Config::get('app_name'), $text)));
+
+                            $this->sendPdf($invoiceTemplateData['data'], $orderID, $cashRegister, $mailText, $orderCustomer->email, $subject);
+
+                        }
+                    }
+                } catch (\Exception $e) {
+                    return $e;
+                }
+
+                $invoiceTemplate = new InvoiceTemplateController();
+
+                $templateData = $invoiceTemplate->getInvoiceTemplateToPrint($orderID, $salesOrReceivingType, $transferBranchName, $cashRegister, $orderType, 'receipt');
+
+
+                $response = [
+                    'orderID' => $orderID,
+                    'orderIdInternalTransfer' => $orderIdInternalTransfer,
+                    'invoiceID' => $invoiceId,
+                    'message' => Lang::get('lang.payment_done_successfully'),
+                    'invoiceTemplate' => $templateData,
+                    'lastInvoiceId' => $lastInvoiceId,
+                ];
+
+                return $response;
+            } else {
+                $response = [
+                    'orderID' => $orderID,
+                    'orderIdInternalTransfer' => $orderIdInternalTransfer,
+                    'invoiceID' => $invoiceId,
+                    'message' => Lang::get('lang.payment_done_successfully'),
+                    'lastInvoiceId' => $lastInvoiceId,
+                ];
+
+                
+
+                return $response;
+            }
+        }        
+    }
+
+    public function getOrderAuditDetails($id)
+    {
+
+        $orderAuditTrail = OrderItemLog::getOrderAuditTrail($id);
+        
+        foreach($orderAuditTrail as &$orderDetails)
+        {
+            if(isset($orderDetails->product_custom_details) && !empty($orderDetails->product_custom_details))
+            {          
+                $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
+            }
+    
+            // if ($orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
+    
+            if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+
+            $no_item_purchases = OrderItemLog::getItemDiscountAndItemPurchased($orderDetails->id);
+
+            if(!$no_item_purchases->item_purchased)
+            {
+                $no_item_purchases = OrderItems::getItemDiscountAndItemPurchased($orderDetails->id);
+            }
+
+            $orderDetails->discount = $no_item_purchases->discount;
+
+            $orderDetails->item_purchased = $no_item_purchases->item_purchased;
+        }
+
+        // $orderAuditTrail = OrderLog::getOrderAuditDetails($id);
+        
+        return ['datarows' => $orderAuditTrail];
+    }
+
+    public function getOldOrderInformation($orderId)
+    {
+        return Order::getOldOrderDetails($orderId);        
+    }
+
+    public function getOldOrderItemsInformation($orderId)
+    {
+        return OrderItems::getItemsByOrderId($orderId);
+    }
+
+    public function insertOrderLog($data)
+    {
+        return OrderLog::insertData($data);
+    }
+
+    public function insertOrderItemLog($data)
+    {
+        return OrderItemLog::insertData($data);
     }
 }

@@ -40,7 +40,7 @@
                         <label class="custom-control-label" for="setting-role-2">{{
                             trans('lang.can_see_application_settings') }}</label> <br>
                     </div>
-                    <div class="custom-control custom-checkbox">
+                    <!-- <div class="custom-control custom-checkbox">
                         <input type="checkbox" class="custom-control-input" id="sales-setting-role-1" v-model="check"
                                value="can_manage_sales_setting" name="can_manage_sales_setting"/>
                         <label class="custom-control-label" for="sales-setting-role-1">{{
@@ -143,7 +143,7 @@
                                value="can_see_invoice_setting" name="can_see_invoice_setting"/>
                         <label class="custom-control-label" for="setting-role-13">{{
                             trans('lang.can_see_invoice_setting') }}</label> <br>
-                    </div>
+                    </div> -->
 
                     <div class="custom-control custom-checkbox">
                         <input type="checkbox" class="custom-control-input" id="setting-role-14" v-model="check"
@@ -158,7 +158,7 @@
                             }}</label> <br>
                     </div>
 
-                    <div class="custom-control custom-checkbox">
+                    <!-- <div class="custom-control custom-checkbox">
                         <input type="checkbox" class="custom-control-input" id="setting-role-16" v-model="check"
                                value="can_manage_cash_registers" name="can_manage_cash_registers"/>
                         <label class="custom-control-label" for="setting-role-16">{{
@@ -169,9 +169,9 @@
                                value="can_see_cash_registers" name="can_see_cash_registers"/>
                         <label class="custom-control-label" for="setting-role-17">{{
                             trans('lang.can_see_cash_registers') }}</label> <br>
-                    </div>
+                    </div> -->
 
-                    <div class="custom-control custom-checkbox">
+                    <!-- <div class="custom-control custom-checkbox">
                         <input type="checkbox" class="custom-control-input" id="setting-role-18" v-model="check"
                                value="can_manage_users" name="can_manage_users"/>
                         <label class="custom-control-label" for="setting-role-18">{{ trans('lang.can_manage_users')
@@ -294,7 +294,7 @@
                                value="can_see_shipping_area" name="can_see_shipping_area"/>
                         <label class="custom-control-label" for="shipping-area-setting-2">{{
                             trans('lang.can_see_shipping_area') }}</label> <br>
-                    </div>
+                    </div> -->
 
                 </div>
                 <div class="form-group col-md-12">
@@ -393,7 +393,7 @@
                     </div>
                 </div>
 
-                <div class="form-group <col>-md-12">
+                <!-- <div class="form-group <col>-md-12">
                     <h6 class="m-0">{{trans('lang.suppliers')}}</h6>
                     <div class="custom-control custom-checkbox">
                         <input class="custom-control-input" type="checkbox" id="supplier-role-1" v-model="check"
@@ -414,7 +414,7 @@
                             }}</label>
                     </div>
 
-                </div>
+                </div> -->
 
                 <div class="form-group col-md-12">
                     <h6 class="m-0">{{trans('lang.receives')}}</h6>
@@ -460,7 +460,7 @@
                     </div>
                 </div>
 
-                <div class="form-group col-md-12">
+                <!-- <div class="form-group col-md-12">
                     <h6 class="m-0">{{trans('lang.cash_register')}}</h6>
                     <div class="custom-control custom-checkbox">
                         <input class="custom-control-input" type="checkbox" id="cash-role-1" v-model="check"
@@ -468,9 +468,9 @@
                         <label class="custom-control-label" for="cash-role-1">{{
                             trans('lang.can_close_others_cash_register') }}</label><br>
                     </div>
-                </div>
+                </div> -->
 
-                <div class="form-group col-md-12">
+                <!-- <div class="form-group col-md-12">
                     <h6 class="m-0">{{trans('lang.reports')}}</h6>
                     <div class="custom-control custom-checkbox">
                         <input class="custom-control-input" type="checkbox" id="report-role-1" v-model="check"
@@ -600,7 +600,7 @@
                         <label class="custom-control-label" for="report-role-21">{{ trans('lang.can_see_shipment_report')
                             }}</label>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="col-12">
                     <button class="btn app-color mobile-btn" :disabled="errors.any()" type="submit"
