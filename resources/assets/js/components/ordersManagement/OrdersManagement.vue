@@ -329,6 +329,12 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                         sortable: false
                                     },
                                     {
+                                        title: "lang.tax_total",
+                                        key: "total_tax",
+                                        type: "text",
+                                        sortable: false
+                                    },
+                                    {
                                         title: "lang.action",
                                         type: "component",
                                         componentName: "orders-list-action-component"
@@ -344,7 +350,8 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                     "sub_total",
                                     "tax",
                                     "discount",
-                                    "due_amount"
+                                    "due_amount",
+                                    "total_tax"
                                 ],
                                 dateFormatting: ["date"],
                                 right_align: [
@@ -353,7 +360,8 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                     "tax",
                                     "discount",
                                     "total",
-                                    "due_amount"
+                                    "due_amount",
+                                    "total_tax"
                                 ],
                                 summation: [
                                     "sub_total",
@@ -361,7 +369,8 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                     "tax",
                                     "discount",
                                     "total",
-                                    "due_amount"
+                                    "due_amount",
+                                    "total_tax"
                                 ],
                                 summationKey: ["invoice_id"],
                                 filters: [

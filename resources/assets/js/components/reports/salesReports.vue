@@ -147,11 +147,11 @@ export default {
                                 {title: 'lang.date_range', key: 'date_range', type: 'date_range'},
                                 {
                                     title: 'lang.sales_type', type: 'dropdown', key: 'sales_type', options: [
-                                        {text: 'lang.all', value: 'all', selected: true},
-                                        {text: 'lang.sold_to_customer', value: 'customer'},
-                                        {text: 'lang.internal_sales', value: 'internal'},
-                                        {text: 'lang.internal_transfer', value: 'internal-transfer'},
-                                        {text: 'lang.sales_returns', value: 'returns'},
+                                        // {text: 'lang.all', value: 'all', selected: true},
+                                        {text: 'lang.sold_to_customer', value: 'customer', selected: true},
+                                        // {text: 'lang.internal_sales', value: 'internal'},
+                                        // {text: 'lang.internal_transfer', value: 'internal-transfer'},
+                                        // {text: 'lang.sales_returns', value: 'returns'},
                                     ]
                                 },
                                 {

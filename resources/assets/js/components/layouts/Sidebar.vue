@@ -71,7 +71,7 @@
                 </a>
             </li> -->
             
-            <!--
+            
             <li
                 v-if="isReportActive"
                 :class="{'active-side-bar': currentUrl == publicPath+'/reports', 'active-hover': isConnected || offline == 0}"
@@ -80,7 +80,7 @@
                     <i class="la la-pie-chart"></i>
                     <div>{{ trans('lang.reports') }}</div>
                 </a>
-            </li> -->
+            </li>
             <li
                 v-if="isSettingActive"
                 :class="{'active-side-bar': currentUrl == publicPath+'/settings', 'active-hover': isConnected || offline == 0}"

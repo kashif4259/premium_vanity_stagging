@@ -109,13 +109,13 @@
                             {{
                             trans('lang.receives') }}
                         </a>
-                    </li>
+                    </li> -->
                     <li>
                         <a :href="publicPath+'/reports'" class="app-color-text">
                             <i class="la la-pie-chart la-2x"></i>
                             {{ trans('lang.reports') }}
                         </a>
-                    </li> -->
+                    </li>
                     <li>
                         <a :href="publicPath+'/settings'" class="app-color-text">
                             <i class="la la-gear la-2x"></i>

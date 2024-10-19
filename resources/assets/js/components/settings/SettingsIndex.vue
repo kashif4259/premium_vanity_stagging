@@ -15,7 +15,7 @@
                             <div class="main-layout-card-header">
                                 <div class="main-layout-card-content-wrapper">
                                     <div class="main-layout-card-header-contents">
-                                        <h5 class="bluish-text m-0">{{ trans('lang.settings') }}44</h5>
+                                        <h5 class="bluish-text m-0">{{ trans('lang.settings') }}</h5>
                                     </div>
                                 </div>
                             </div>

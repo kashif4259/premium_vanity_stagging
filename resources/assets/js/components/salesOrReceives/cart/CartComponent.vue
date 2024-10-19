@@ -301,7 +301,7 @@
                             <input type="text"
                                    class="form-control" v-model="cartItem.product_variations.drawer_side">
                     </div>
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
                         <label :for="'cart-item-vanity-drawers'+index" class="label-in-cart ">
                             {{ trans('lang.vanity_wall') }}</label>
                             <input type="text"

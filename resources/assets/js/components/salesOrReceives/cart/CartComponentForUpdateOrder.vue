@@ -150,19 +150,19 @@
                                 <input type="text"
                                     class="form-control" v-model="cartItem.product_variations.drawer_side">
                         </div>
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
                             <label :for="'cart-item-vanity-drawers'+index" class="label-in-cart ">
                                 {{ trans('lang.vanity_wall') }}</label>
                                 <input type="text"
                                     class="form-control" v-model="cartItem.product_variations.wall_side">
                         </div>
-                        <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization">
+                        <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization" style="display: none;">
                             <label :for="'cart-item-vanity-color'+index" class="label-in-cart ">
                                 {{ trans('lang.vanity_color') }}</label>
                                 <input type="text"
                                     class="form-control" v-model="cartItem.product_variations.color">
                         </div>
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
                             <label :for="'cart-item-vanity-size'+index" class="label-in-cart ">
                                 {{ trans('lang.vanity_size') }}</label>
                                 <input type="text"

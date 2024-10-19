@@ -651,7 +651,9 @@ class OrderItems extends BaseModel
                 DB::raw("customers.id as customer_id"),
                 DB::raw("((sum(((abs(order_items.quantity)*order_items.price)* order_items.discount)/100))+ 
                 (select abs(order_items.sub_total) from order_items where order_items.type ='discount' and order_items.order_id = orders.id)) AS discount"),
-                DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased')
+                DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased'),
+                'orders.tax_percentage',
+                'orders.total_tax'
             )
             ->where('orders.order_type', '=', 'sales')
             ->whereIn('orders.status', ['done','delete'])

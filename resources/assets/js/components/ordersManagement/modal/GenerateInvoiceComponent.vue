@@ -148,9 +148,9 @@
                                                                 <span v-if="i == 'drawer_side' && variation != ''  ">
                                                                     DRAWERS SIDE: {{ variation }}
                                                                 </span>
-                                                                <span v-if="i == 'wall_side' && variation != '' ">
+                                                                <!-- <span v-if="i == 'wall_side' && variation != '' ">
                                                                     WALL SIDE: {{ variation }}
-                                                                </span>
+                                                                </span> -->
                                                                 <span v-if="i == 'handles' && variation != '' ">
                                                                     HANDLES: {{ variation }}
                                                                 </span>

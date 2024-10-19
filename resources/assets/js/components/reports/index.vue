@@ -72,86 +72,86 @@ export default {
                     lang: "lang.sales",
                     component: "sales-reports"
                 },
-                {
-                    name: "sales_details_report",
-                    lang: "lang.sales_details",
-                    component: "sales-details"
-                },
-                {
-                    name: "sales_summary_reports",
-                    lang: "lang.sales_summary",
-                    component: "sales-summary-reports"
-                },
-                {
-                    name: "receiving_report",
-                    lang: "lang.receives",
-                    component: "receiving-reports"
-                },
-                {
-                    name: "receiving_summary",
-                    lang: "lang.receives_summary",
-                    component: "receiving-summary-reports"
-                },
-                {
-                    name: "register_report",
-                    lang: "lang.register_logs",
-                    component: "cash-register-log-reports"
-                },
-                {
-                    name: "inventory_report",
-                    lang: "lang.inventories",
-                    component: "inventory-reports"
-                },
-                {
-                    name: "payment_report",
-                    lang: "lang.payment_report",
-                    component: "payment-reports"
-                },
-                {
-                    name: "payment_summary_report",
-                    lang: "lang.payment_summary_report",
-                    component: "payment-summary-reports"
-                },
-                {
-                    name: "yearly_sales_chart",
-                    lang: "lang.sales_statistics",
-                    component: "yearly-sales-chart"
-                },
-                {
-                    name: "available_tax_report",
-                    lang: "lang.tax",
-                    component: "available-tax-report"
-                },
-                {
-                    name: "profit_loss_report",
-                    lang: "lang.profit_and_loss",
-                    component: "profit-loss-report"
-                },
-                {
-                    name: "customers_summary_report",
-                    lang: "lang.customers_summary",
-                    component: "customers-summary-reports"
-                },
-                {
-                    name: "suppliers_summary_report",
-                    lang: "lang.suppliers_summary",
-                    component: "suppliers-summary-reports"
-                },
-                {
-                    name: "sales_and_purchase_report",
-                    lang: "lang.sales_and_purchase",
-                    component: "sales-and-purchase-reports"
-                },
-                {
-                    name: "adjust_stock_report",
-                    lang: "lang.stock_adjustment",
-                    component: "adjust-stock-reports"
-                },
-                {
-                    name: "shipment_report",
-                    lang: "lang.shipment_report",
-                    component: "shipment-reports"
-                }
+                // {
+                //     name: "sales_details_report",
+                //     lang: "lang.sales_details",
+                //     component: "sales-details"
+                // },
+                // {
+                //     name: "sales_summary_reports",
+                //     lang: "lang.sales_summary",
+                //     component: "sales-summary-reports"
+                // },
+                // {
+                //     name: "receiving_report",
+                //     lang: "lang.receives",
+                //     component: "receiving-reports"
+                // },
+                // {
+                //     name: "receiving_summary",
+                //     lang: "lang.receives_summary",
+                //     component: "receiving-summary-reports"
+                // },
+                // {
+                //     name: "register_report",
+                //     lang: "lang.register_logs",
+                //     component: "cash-register-log-reports"
+                // },
+                // {
+                //     name: "inventory_report",
+                //     lang: "lang.inventories",
+                //     component: "inventory-reports"
+                // },
+                // {
+                //     name: "payment_report",
+                //     lang: "lang.payment_report",
+                //     component: "payment-reports"
+                // },
+                // {
+                //     name: "payment_summary_report",
+                //     lang: "lang.payment_summary_report",
+                //     component: "payment-summary-reports"
+                // },
+                // {
+                //     name: "yearly_sales_chart",
+                //     lang: "lang.sales_statistics",
+                //     component: "yearly-sales-chart"
+                // },
+                // {
+                //     name: "available_tax_report",
+                //     lang: "lang.tax",
+                //     component: "available-tax-report"
+                // },
+                // {
+                //     name: "profit_loss_report",
+                //     lang: "lang.profit_and_loss",
+                //     component: "profit-loss-report"
+                // },
+                // {
+                //     name: "customers_summary_report",
+                //     lang: "lang.customers_summary",
+                //     component: "customers-summary-reports"
+                // },
+                // {
+                //     name: "suppliers_summary_report",
+                //     lang: "lang.suppliers_summary",
+                //     component: "suppliers-summary-reports"
+                // },
+                // {
+                //     name: "sales_and_purchase_report",
+                //     lang: "lang.sales_and_purchase",
+                //     component: "sales-and-purchase-reports"
+                // },
+                // {
+                //     name: "adjust_stock_report",
+                //     lang: "lang.stock_adjustment",
+                //     component: "adjust-stock-reports"
+                // },
+                // {
+                //     name: "shipment_report",
+                //     lang: "lang.shipment_report",
+                //     component: "shipment-reports"
+                // }
             ],
             isVisible: function(tabName) {
                 return this[tabName] == "1";
