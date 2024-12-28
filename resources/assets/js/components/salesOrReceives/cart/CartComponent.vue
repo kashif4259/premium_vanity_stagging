@@ -424,7 +424,7 @@
                                 Counter Top
                             </label>
                             <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_yes_no" @change="getCounterTopForVanity($event.target.value, cartItem, index)">
-                                <option value="0">Select Value</option>
+                                <option value="">Select Value</option>
                                 <option value="yes">Yes</option>
                                 <option value="no">No</option>
                             </select>
@@ -435,7 +435,7 @@
                                 Select Counter Top
                             </label>
                             <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top">
-                                <option value="0">Select Counter Top</option>
+                                <option value="">Select Counter Top</option>
                             </select>
                         </div>
                         
