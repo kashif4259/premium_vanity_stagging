@@ -74,3 +74,9 @@ Route::post('delete-register/{id}', [CashRegisterController::class, 'deleteCashR
 Route::post('cash-register-open-close', [CashRegisterController::class, 'cashRegisterLogs']);
 Route::post('/register-sales-info/{id}', [CashRegisterController::class, 'registerSalesInfo']);
 Route::get('/cash-register-total-sales-balance/{id}', [CashRegisterController::class, 'cashRegisterInfo']);
+
+Route::get('get-fillers', [SalesController::class, 'getFillersWithouutPrice']);
+Route::get('get-handles', [SalesController::class, 'getAllHandles']);
+Route::get('get-knobs', [SalesController::class, 'getAllKnobs']);
+Route::get('get-counter-top', [SalesController::class, 'getAllCounterTop']);
+Route::get('get-product-by-id/{id}', [SalesController::class, 'getProductDetailsById']);

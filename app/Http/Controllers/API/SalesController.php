@@ -517,17 +517,137 @@ class SalesController extends Controller
 
         foreach ($request->cart as $cart) {
             $availableQuantityCheck = OrderItems::checkAvailableQuantity($cart['variantID']);
-
+            
             if ($cart['orderType'] !== 'discount' && $cart['orderType'] !== 'delivery') {
                 $outOfStockVariantTitle = $cart['variantTitle'] ? ' (' . $cart['variantTitle'] . ') ' : ' ' . $cart['variantTitle'] . ' ';
+                
                 if ($outOfStock == 1 && $request->orderType == 'sales' && $request->status == 'done' && $cart['quantity'] > $availableQuantityCheck && $cart['quantity'] > 0) {
                     $checkAvailableQuantity = 'true';
                     if ($availableQuantityCheck <= 0) {
+                        
                         array_push($message, $cart['productTitle'] . $outOfStockVariantTitle . trans('lang.is_out_of_stock') . ' ' . trans('lang.please_remove_from_cart'));
                     } else {
+                        
                         array_push($message, $cart['productTitle'] . $outOfStockVariantTitle . trans('lang.is_out_of_stock') . ' ' . trans('lang.available_quantity') . '' . $availableQuantityCheck . '.');
                     }
                 }
+                
+
+                // $product_variations = $cart['product_variations'];
+                
+                // if($outOfStock == 1 && $request->orderType == 'sales' && $request->status == 'done')
+                // {
+                //     /**
+                //      * this block check for counter top
+                //      */
+                //     $counter_top = $product_variations['counter_top']??0;
+
+                //     $availableQuantityCheck = OrderItems::checkAvailableQuantity($counter_top);
+                    
+                //     $isCouterTop = $product_variations['counter_top_yes_no'] ?? 'no';
+                    
+                //     if($counter_top > 0 && $isCouterTop == 'yes' && 1 > $availableQuantityCheck)
+                //     {
+                //         $counter_top_product = Product::where('id', '=', $counter_top)->first();
+
+                //         $checkAvailableQuantity = 'true';
+                        
+                //         if ($availableQuantityCheck <= 0) {
+                //             array_push($message, 'Counter Top: '.$counter_top_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.please_remove_from_cart'));
+                //         } else {
+                //             array_push($message, 'Counter Top: '.$counter_top_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.available_quantity') . '' . $availableQuantityCheck . '.');
+                //         }
+                //     }
+
+                //     /**
+                //      * this block check for handles
+                //      */
+
+                //      $handles = $product_variations['handles']??0;
+                     
+                //      $handles_quantity = $product_variations['handles_quantity']??0;
+
+                //      $availableQuantityCheck = OrderItems::checkAvailableQuantity($handles);
+
+                //      if($handles > 0 && $handles_quantity > $availableQuantityCheck)
+                //      {
+                //         $handles_product = Product::where('id', '=', $handles)->first();
+
+                //         $checkAvailableQuantity = 'true';
+                        
+                //         if ($availableQuantityCheck <= 0) {
+                //             array_push($message, 'Counter Top: '.$handles_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.please_remove_from_cart'));
+                //         } else {
+                //             array_push($message, 'Counter Top: '.$handles_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.available_quantity') . '' . $availableQuantityCheck . '.');
+                //         }
+                //      }
+
+                //      /**
+                //       * this block check for knobs
+                //       */
+
+                //       $knobs = $product_variations['knobs']??0;
+
+                //       $knobs_quantity = $product_variations['knobs_quantity']??0;
+
+                //       $availableQuantityCheck = OrderItems::checkAvailableQuantity($knobs);
+
+                //      if($knobs > 0 && $knobs_quantity > $availableQuantityCheck)
+                //      {
+                //         $knobs_product = Product::where('id', '=', $knobs)->first();
+
+                //         $checkAvailableQuantity = 'true';
+                        
+                //         if ($availableQuantityCheck <= 0) {
+                //             array_push($message, 'Counter Top: '.$knobs_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.please_remove_from_cart'));
+                //         } else {
+                //             array_push($message, 'Counter Top: '.$knobs_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.available_quantity') . '' . $availableQuantityCheck . '.');
+                //         }
+                //      }
+
+                //      /**
+                //       * this block check for 
+                //       */
+
+                //       $filler = $product_variations['filler']??0;
+
+                //       $filler_quantity = $product_variations['filler_quantity']??0;
+
+                //       $availableQuantityCheck = OrderItems::checkAvailableQuantity($filler);
+
+                //      if($filler > 0 && $filler_quantity > $availableQuantityCheck)
+                //      {
+                //         $filler_product = Product::where('id', '=', $filler)->first();
+
+                //         $checkAvailableQuantity = 'true';
+                        
+                //         if ($availableQuantityCheck <= 0) {
+                //             array_push($message, 'Counter Top: '.$filler_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.please_remove_from_cart'));
+                //         } else {
+                //             array_push($message, 'Counter Top: '.$filler_product->title . trans('lang.is_out_of_stock') . ' ' . trans('lang.available_quantity') . '' . $availableQuantityCheck . '.');
+                //         }
+
+                //         // if(!count($message))
+                //         // {
+                //         //     $fillerCartItem =  [
+                //         //         'product_id' => $filler_product['id'],
+                //         //         'variant_id' => $$filler_product['id'],
+                //         //         'type' => 'sales',
+                //         //         'quantity' => $quantity,
+                //         //         'price' => $cart['price'],
+                //         //         'discount' => $cart['discount'],
+                //         //         'sub_total' => $cart["calculatedPrice"],
+                //         //         'tax_id' => $cart['taxID'],
+                //         //         'order_id' => $orderID,
+                //         //         'note' => $cart['cartItemNote'],
+                //         //         'created_at' => date('Y-m-d H:i:s'),
+                //         //         'updated_at' => date('Y-m-d H:i:s'),
+                //         //         'product_custom_details' => (!empty($product_custom_details) ? $product_custom_details : null)
+                //         //     ];
+                //         // }
+                //      }
+                // }
+
             }
 
 
@@ -806,6 +926,8 @@ class SalesController extends Controller
                 ]);
             }
         }
+        
+        //array push into cart
 
         if ($orderStatus != 'hold') {
             if (sizeof($payment) > 0) {
@@ -1590,4 +1712,74 @@ class SalesController extends Controller
         return $orderIdInternalTransfer;
     }
 
+    public function getFillersWithouutPrice()
+    {
+        $fillerIds = Product::where('category_id', '=', 19)->pluck('id')->toArray();
+
+        return \DB::table('order_items')
+            ->selectRaw('order_items.product_id, products.title')
+            ->leftJoin('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('products', 'products.id', '=', 'order_items.product_id') // Join with products table
+            ->whereIn('order_items.product_id', $fillerIds)
+            ->where('order_items.price', '=', 0.00)
+            ->groupBy('order_items.product_id', 'products.title', 'order_items.variant_id') // Group by required fields
+            ->havingRaw('sum(order_items.quantity) > 0') // Filter where total quantity > 0
+            ->get();
+    }
+
+    public function getAllHandles()
+    {
+        $fillerIds = Product::where('category_id', '=', 20)->pluck('id')->toArray();
+
+        return \DB::table('order_items')
+            ->selectRaw('order_items.product_id, products.title')
+            ->leftJoin('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('products', 'products.id', '=', 'order_items.product_id') // Join with products table
+            ->whereIn('order_items.product_id', $fillerIds)
+            // ->where('order_items.price', '=', 0.00)
+            ->groupBy('order_items.product_id', 'products.title', 'order_items.variant_id') // Group by required fields
+            ->havingRaw('sum(order_items.quantity) > 0') // Filter where total quantity > 0
+            ->get();
+    }
+
+    public function getAllKnobs()
+    {
+        $fillerIds = Product::where('category_id', '=', 21)->pluck('id')->toArray();
+
+        return \DB::table('order_items')
+            ->selectRaw('order_items.product_id, products.title')
+            ->leftJoin('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('products', 'products.id', '=', 'order_items.product_id') // Join with products table
+            ->whereIn('order_items.product_id', $fillerIds)
+            // ->where('order_items.price', '=', 0.00)
+            ->groupBy('order_items.product_id', 'products.title', 'order_items.variant_id') // Group by required fields
+            ->havingRaw('sum(order_items.quantity) > 0') // Filter where total quantity > 0
+            ->get();
+    }
+
+    public function getAllCounterTop()
+    {
+        $fillerIds = Product::where('category_id', '=', 22)->pluck('id')->toArray();
+
+        return \DB::table('order_items')
+            ->selectRaw('order_items.product_id, products.title')
+            ->leftJoin('orders', 'orders.id', '=', 'order_items.order_id')
+            ->leftJoin('products', 'products.id', '=', 'order_items.product_id') // Join with products table
+            ->whereIn('order_items.product_id', $fillerIds)
+            ->where('order_items.price', '=', 0.00)
+            ->groupBy('order_items.product_id', 'products.title', 'order_items.variant_id') // Group by required fields
+            ->havingRaw('sum(order_items.quantity) > 0') // Filter where total quantity > 0
+            ->get();
+    }
+
+    public function getProductDetailsById($id)
+    {
+        return \DB::table('products')
+            ->select('products.id', 'products.title', \DB::raw('SUM(order_items.quantity) AS product_quantity'))
+            ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
+            ->where('products.id', $id)
+            ->groupBy('products.id', 'products.title')
+            ->first();
+    }
+    
 }

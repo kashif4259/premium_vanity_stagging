@@ -4,6 +4,7 @@ import {concatProductArray, productConverter} from "../helper/productConverter";
 import {productRequestGenerator} from "../helper/helpers";
 
 export default {
+   
     data: () => ({
         parseInt,
         bookedTables: [],
@@ -254,7 +255,9 @@ export default {
                     this.destroyCart(true);
                 }
             }
-        }
+        },
+
+        
     },
     created() {
         deleteLocalStorageItemsForDeliveryAndPickup();
@@ -1102,12 +1105,27 @@ export default {
                     {
                         cartObjc.product_variations = {
                                 hole:"",
+                                // is_filler:"",
+                                // selected_filler:false,
                                 filler:"",
                                 handles:"",
                                 drawer_side:"",
                                 wall_side:"",
                                 color:"",
-                                size:""
+                                filler_size:"",
+                                showFillerSize:false,
+                                handle_drawer_or_door:"",
+                                knobs_drawer_or_door:"",
+                                knobs:"",
+                                other_hanldes:"",
+                                other_knobs:"",
+                                filler_quantity:0,
+                                handles_quantity:0,
+                                knobs_quantity:0,
+                                counter_top_yes_no:"",
+                                counter_top:"",
+                                counter_top_side_splash:0,
+                                counter_top_back_splash:0
                             }
                     }
 
@@ -1165,6 +1183,7 @@ export default {
             
 
             console.log("this.grandTotal", this.grandTotal);
+            console.log("this.cart", this.cart);
             this.setCookieDataToGlobal(cookieData);
 
             let subTotalAmountMethodData = subTotalAmount(
@@ -2276,6 +2295,10 @@ export default {
                 this.setCartItemsToCookieOrDB(1);
                 this.makeFinalCart('done');
             }
+        },
+
+        updateFinalCartWithCustmization(finalCart){
+            console.log('updateFinalCartWithCustmization'+finalCart);
         }
         
     }

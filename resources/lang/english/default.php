@@ -1266,7 +1266,7 @@ return array(
     'vanity_color' => 'Color',
     'vanity_size' => 'Size',
     'order_delivery' => 'Delivery',
-
+    'handles_on_drawers_or_doors' => 'Handles On Drawers/Door',
 
     //orders management
     'orders' => 'Orders Management',

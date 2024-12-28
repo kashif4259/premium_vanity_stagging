@@ -22,3 +22,5 @@ resources/assets/sass/scss/.sass-cache
 .rocketeer/
 .idea/workspace.xml
 resources/assets/sass/scss/style.css.map
+
+yarn.lock

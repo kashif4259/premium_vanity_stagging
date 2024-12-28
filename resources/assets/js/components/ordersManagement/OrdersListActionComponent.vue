@@ -37,7 +37,7 @@
             <!-- generate payments --> 
             <a v-if="salesListEdit == 1 " href="" class='action-button'  data-toggle="modal"
                data-target="#generate-payments-history-modal"
-               @click.prevent="generatePaymentsHistory(rowData,rowIndex)">
+               @click.prevent="generatePaymentsHistory(rowData,rowIndex)" title="Payment History">
                <i class="la la-list-alt"/>
             </a>
         </div>

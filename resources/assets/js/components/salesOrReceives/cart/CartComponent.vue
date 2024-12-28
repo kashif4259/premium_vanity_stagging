@@ -239,6 +239,8 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Start row 1-->
                 <div class="form-row mx-0 px-2  collapse-animation"
                      :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
                     <div class="form-group pl-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']">
@@ -268,59 +270,202 @@
                             </payment-input>
                         </div>
                     </div>
-                    <div class="col-12 p-0 pb-2">
+                </div> <!-- End row 1-->
+
+                <!-- Start Row 2-->
+                <div class="form-row mx-0 px-2  collapse-animation"
+                     :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                    
+                     <div class="col-12 p-0 pb-2">
                         <label :for="'cart-item-note'+index" class="label-in-cart">{{ trans('lang.note') }}</label>
                         <textarea :id="'cart-item-note'+index"
-                                  @keyup="setCartItemsToCookieOrDB(1)"
-                                  class="form-control"
-                                  v-model="cartItem.cartItemNote">
+                                @keyup="setCartItemsToCookieOrDB(1)"
+                                class="form-control"
+                                v-model="cartItem.cartItemNote">
                         </textarea>
                     </div>
+                </div> <!-- End row 2-->
+                
+                <div v-if="cartItem.categoryID == 1">
+                    <!-- Start row 4 For Drawers-->
+                    <div class="form-row mx-0 px-2  collapse-animation"
+                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                         <div class="form-group pl-0 mb-zero col-6" v-if="cartItem.isCustomization">
+                            <label :for="'cart-drawerside-on-drawers-door' + index" class="label-in-cart">
+                                Drawers Side
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.drawer_side">
+                                <option value="">Select Value</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                            </select>
+                        </div>
+                        
+                    </div><!-- End row 4-->
 
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
-                        <label :for="'cart-item-vanity-hole'+index" class="label-in-cart ">
-                            {{ trans('lang.vanity_hole') }}</label>
+                    <!-- start row 3 For Fillers -->
+                    <div class="form-row mx-0 px-2  collapse-animation"
+                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                        
+                         <div class="form-group pl-0 mb-zero col-4"  v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-filler-quantity'+index" class="label-in-cart ">
+                                Filler Quantity</label>
+                                <select class="custom-select custom-tax-calculate" @change="fillerSize($event.target.value, cartItem, index)" v-model="cartItem.product_variations.filler_quantity">
+                                    <option value="0">Select Quantity</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                </select>
+                        </div>
+    
+                         <div class="form-group pl-0 mb-zero col-4"  v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-filler'+index" class="label-in-cart ">
+                                Select Filler</label>
+                                <select class="custom-select custom-tax-calculate" v-model="cartItem.product_variations.filler" >
+                                    <option value="">Select Filler</option>
+                                </select>
+                        </div>
+    
+                        <div class="form-group pl-0 mb-zero col-4" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-filler-size'+index" class="label-in-cart ">
+                                {{ trans('lang.vanity_size') }}</label>
+                                <input type="text"
+                                    step="0.01"
+                                    min="0"
+                                    class="form-control" value="0.5" v-model="cartItem.product_variations.filler_size" @input="validateNumber(cartItem)">
+                        </div>
+                    </div><!-- End row 3-->
+    
+                    <!-- Start row 4 For Handles-->
+                    <div class="form-row mx-0 px-2  collapse-animation"
+                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                         <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-handles-on-drawers-door' + index" class="label-in-cart">
+                                Handles On Drawers/Door
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.handle_drawer_or_door" @change="getHandlesForVanity($event.target.value, cartItem, index)">
+                                <option value="">Select Value</option>
+                                <option value="drawers">Drawers</option>
+                                <option value="door">Door</option>
+                            </select>
+                        </div>
+    
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-handles' + index" class="label-in-cart">
+                                Handles
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.handles">
+                                <option value="">Select Handles</option>
+                            </select>
+                        </div>
+    
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-handles-quantity' + index" class="label-in-cart">
+                                Quantity
+                            </label>
                             <input type="text"
-                                   class="form-control" v-model="cartItem.product_variations.hole">
-                    </div>
-                    <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization">
-                        <label :for="'cart-vanity-filler'+index" class="label-in-cart ">
-                            {{ trans('lang.vanity_filler') }}</label>
+                                class="form-control" v-model="cartItem.product_variations.handles_quantity">
+                        </div>
+    
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-handles-others' + index" class="label-in-cart">
+                                Others
+                            </label>
                             <input type="text"
-                                   class="form-control" v-model="cartItem.product_variations.filler">
-                    </div>
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                        <label :for="'cart-item-vanity-handles'+index" class="label-in-cart ">
-                            {{ trans('lang.vanity_handles') }}</label>
+                                class="form-control" v-model="cartItem.product_variations.other_hanldes">
+                        </div>
+    
+                    </div><!-- End row 4-->
+    
+                    <!-- Start row 4 For Knobs-->
+                    <div class="form-row mx-0 px-2  collapse-animation"
+                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                         <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-knobs-on-drawers-door' + index" class="label-in-cart">
+                                Knobs On Drawers/Door
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.knobs_drawer_or_door" @change="getKnobsForVanity($event.target.value, cartItem, index)">
+                                <option value="">Select Value</option>
+                                <option value="drawers">Drawers</option>
+                                <option value="door">Door</option>
+                            </select>
+                        </div>
+    
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-knobs' + index" class="label-in-cart">
+                                Knobs
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.knobs">
+                                <option value="">Select Knobs</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-knob-quantity' + index" class="label-in-cart">
+                                Quantity
+                            </label>
                             <input type="text"
-                                   class="form-control" v-model="cartItem.product_variations.handles">
-                    </div>
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                        <label :for="'cart-item-vanity-drawers'+index" class="label-in-cart ">
-                            {{ trans('lang.vanity_drawers') }}</label>
+                                class="form-control" v-model="cartItem.product_variations.knobs_quantity">
+                        </div>
+    
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-knob-others' + index" class="label-in-cart">
+                                Others
+                            </label>
                             <input type="text"
-                                   class="form-control" v-model="cartItem.product_variations.drawer_side">
-                    </div>
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
-                        <label :for="'cart-item-vanity-drawers'+index" class="label-in-cart ">
-                            {{ trans('lang.vanity_wall') }}</label>
-                            <input type="text"
-                                   class="form-control" v-model="cartItem.product_variations.wall_side">
-                    </div>
-                    <div class="form-group pl-0 mb-zero col-3"  v-if="cartItem.isCustomization" style="display: none;">
-                        <label :for="'cart-item-vanity-color'+index" class="label-in-cart ">
-                            {{ trans('lang.vanity_color') }}</label>
-                            <input type="text"
-                                   class="form-control" v-model="cartItem.product_variations.color">
-                    </div>
-                    <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization" style="display: none;">
-                        <label :for="'cart-item-vanity-size'+index" class="label-in-cart ">
-                            {{ trans('lang.vanity_size') }}</label>
-                            <input type="text"
-                                   class="form-control" v-model="cartItem.product_variations.size">
-                    </div>
+                                class="form-control" v-model="cartItem.product_variations.other_knobs">
+                        </div>
+                    </div><!-- End row 4-->
+
+                    <!-- Start row 4 For Counter Top-->
+                    <div class="form-row mx-0 px-2  collapse-animation"
+                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                         <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-counter-top-yes-no' + index" class="label-in-cart">
+                                Counter Top
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_yes_no" @change="getCounterTopForVanity($event.target.value, cartItem, index)">
+                                <option value="0">Select Value</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+    
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-counter-top' + index" class="label-in-cart">
+                                Select Counter Top
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top">
+                                <option value="0">Select Counter Top</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-counter-top-side-splash' + index" class="label-in-cart">
+                                Side Splash
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_side_splash">
+                                <option value="0">Select Value</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                                <option value="both">Both</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                            <label :for="'cart-vanity-counter-top-back-splash' + index" class="label-in-cart">
+                                Back Splash
+                            </label>
+                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_back_splash">
+                                <option value="0">Select Value</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+
+                    </div><!-- End row 4-->
 
                 </div>
+
                 </template>
             </div>
         </div>
@@ -624,6 +769,7 @@
 </template>
 
 <script>
+import { lang } from 'moment';
 import axiosGetPost from '../../../helper/axiosGetPostCommon';
 
 export default {
@@ -797,7 +943,8 @@ export default {
             isDisableCartPlusBtn: false,
             deliveryCharges: 0,
             productTotalWithoutDeliveryCharges: 0,
-            custom_tax:0
+            custom_tax:0,
+            getFillers: []
         }
     },
     watch: {
@@ -1014,7 +1161,10 @@ export default {
         $('#cart-modal-for-mobile-view').on('shown.bs.modal', function (e) {
             instance.cartMinHeightSet();
         });
-        // console.log(this.cart);
+        console.log(this.cart);
+
+        // this.getAllfillersWithoutZeroPrice();
+        
     },
     methods: {
         checkDiscountType() {
@@ -1329,6 +1479,7 @@ export default {
             console.log(this.finalCart.customer);
             console.log(this.order_type);
             console.log(this.salesOrReceivingType);
+            this.updateCartWithCustomization();
             if(this.isEmptyObj(this.finalCart.customer) && this.order_type === 'sales' && this.salesOrReceivingType === 'customer'){
                 this.showWarningAlert("Please select customer");
                 $('#cart-payment-modal').modal('hide');
@@ -1348,7 +1499,7 @@ export default {
 
             if (this.selectedCustomer[0]) {
                 selectCustomerForCart = this.selectedCustomer[0];
-            }
+            }  
             this.finalCart = {
                 orderID: this.orderID,
                 orderIdInternalTransfer: this.orderIdInternalTransfer,
@@ -1373,6 +1524,172 @@ export default {
                 time: moment().format('YYYY-MM-DD h:mm A'),
                 taxPercentage: this.custom_tax
             };
+        },
+       
+
+
+        async updateCartWithCustomization() {
+            let newItemForFillers = {};
+            let newItemForHandles = {};
+            let newItemForKnobs = {};
+            let newItemForCounterTop = {};
+
+            for (const item of this.cart) {
+                let productVariations = item.product_variations;
+                /**
+                 * This block for counter top
+                 */
+                if ( productVariations.counter_top != '' && productVariations.counter_top > 0 && productVariations.counter_top_yes_no == 'yes') {
+                    try {
+                        // Use axiosGETorPOSTAsync method
+                        const productDetails = await this.axiosGETorPOSTAsync(this, {
+                            url: `/get-product-by-id/${productVariations.counter_top}`,
+                        });
+
+                        newItemForCounterTop = this.updateCartItem(productVariations,productDetails,item,'counter_top');
+                    } catch (error) {
+                        console.error("Error fetching product details:", error);
+                    }
+                }
+
+                /**
+                 * This block for handles
+                 */
+                if(productVariations.handle_drawer_or_door != '' && productVariations.handles > 0 && productVariations.handles_quantity > 0){
+                    try {
+                        // Use axiosGETorPOSTAsync method
+                        const productDetails = await this.axiosGETorPOSTAsync(this, {
+                            url: `/get-product-by-id/${productVariations.handles}`,
+                        });
+
+                        newItemForHandles = this.updateCartItem(productVariations,productDetails,item,'handles');
+                    } catch (error) {
+                        console.error("Error fetching product details:", error);
+                    }
+                }
+
+                /**
+                 * This block for fillers
+                 */
+                 if(productVariations.filler != '' && productVariations.filler > 0 && productVariations.filler_quantity > 0){
+                    try {
+                        // Use axiosGETorPOSTAsync method
+                        const productDetails = await this.axiosGETorPOSTAsync(this, {
+                            url: `/get-product-by-id/${productVariations.filler}`,
+                        });
+
+                        newItemForFillers = this.updateCartItem(productVariations,productDetails,item,'fillers');
+                    } catch (error) {
+                        console.error("Error fetching product details:", error);
+                    }
+                }
+
+                /**
+                 * This block for knobs
+                 */
+                 if(productVariations.knobs_drawer_or_door != '' && productVariations.knobs > 0 && productVariations.knobs_quantity > 0){
+                    try {
+                        // Use axiosGETorPOSTAsync method
+                        const productDetails = await this.axiosGETorPOSTAsync(this, {
+                            url: `/get-product-by-id/${productVariations.knobs}`,
+                        });
+
+                        newItemForKnobs = this.updateCartItem(productVariations,productDetails,item,'knobs');
+                    } catch (error) {
+                        console.error("Error fetching product details:", error);
+                    }
+                }
+            }
+
+            if (
+                Object.keys(newItemForKnobs).length &&
+                !this.cart.some(cartItem => cartItem.productID === newItemForKnobs.productID)
+            ) {
+                this.cart.push(newItemForKnobs);
+            }
+
+            if (
+                Object.keys(newItemForFillers).length &&
+                !this.cart.some(cartItem => cartItem.productID === newItemForFillers.productID)
+            ) {
+                this.cart.push(newItemForFillers);
+            }
+
+            if (
+                Object.keys(newItemForHandles).length &&
+                !this.cart.some(cartItem => cartItem.productID === newItemForHandles.productID)
+            ) {
+                this.cart.push(newItemForHandles);
+            }
+
+            if (
+                Object.keys(newItemForCounterTop).length &&
+                !this.cart.some(cartItem => cartItem.productID === newItemForCounterTop.productID)
+            ) {
+                this.cart.push(newItemForCounterTop);
+            }
+        },
+        updateCartItem(productVariations,productDetails, item, type){
+            let cartQuantity = '';
+            switch (type) {
+                case 'handles':
+                    cartQuantity = productVariations.handles_quantity;
+                break;
+                case 'knobs':
+                    cartQuantity = productVariations.knobs_quantity;
+                break;
+                case 'fillers':
+                    cartQuantity = productVariations.filler_quantity;
+                break;
+                case 'counter_top':
+                    cartQuantity = 1;
+                break;
+                default:
+                    cartQuantity = '';
+            }
+            return {
+                availbleQuantity: productDetails.product_quantity,
+                calculatedPrice: 0,
+                cartItemNote: item.cartItemNote,
+                categoryID: item.categoryID,
+                discount: 0,
+                isCustomization: false,
+                orderType: item.orderType,
+                orderTypeForDeliveryCharges: item.orderTypeForDeliveryCharges,
+                price: 0,
+                productID: productDetails.id,
+                productTaxPercentage: item.productTaxPercentage,
+                productTitle: productDetails.title,
+                product_variations: {
+                    color: "",
+                    counter_top: "",
+                    counter_top_back_splash: "",
+                    counter_top_side_splash: "",
+                    counter_top_yes_no: "",
+                    drawer_side: "",
+                    filler: "",
+                    filler_quantity: 0,
+                    filler_size: "",
+                    handle_drawer_or_door: "",
+                    handles: "",
+                    handles_quantity: 0,
+                    hole: "",
+                    knobs: "",
+                    knobs_drawer_or_door: "",
+                    knobs_quantity: 0,
+                    other_hanldes: "",
+                    other_knobs: "",
+                    showFillerSize: false,
+                    wall_side: "",
+                },
+                purchase_price: 0,
+                quantity: cartQuantity,
+                showItemCollapse: false,
+                taxID: item.taxID,
+                unformPrice: 0,
+                variantID: productDetails.id,
+                variantTitle: item.variantTitle,
+            }
         },
         setCartItemsToCookieOrDB(flag = 0) {
             this.$emit('setCartItemsToCookieOrDBFromCart', flag);
@@ -1449,6 +1766,258 @@ export default {
         setTaxIncludedOrExcluded(value) {
             this.isTaxExcluded = value;
             this.$emit('setTaxIncludedOrExcludedFromCart', this.isTaxExcluded);
+        },
+
+        selectFillers(value, cartItem){
+            if(value === 'yes'){
+                this.getAllfillersWithoutZeroPrice();
+                cartItem.product_variations.selected_filler = true;
+            }
+        },
+
+        fillerSize(value, cartItem, index) {
+            
+            this.getFillersForVanity(value, cartItem, index);
+            cartItem.product_variations.showFillerSize = !!value;
+            if (value === "1" || value === "2") {
+                cartItem.product_variations.filler_size = 0.5;
+            } else {
+                cartItem.product_variations.filler_size = ""; 
+            }
+
+
+            
+        },
+        validateNumber(cartItem) {
+            const regex = /^\d*\.?\d*$/;
+            if (!regex.test(cartItem.product_variations.filler_size)) {
+                cartItem.product_variations.filler_size = cartItem.product_variations.filler_size.slice(0, -1);
+            }
+        },
+
+        getHandlesForVanity(value, cartItem, index) {
+            let instance = this;
+            instance.axiosGETorPOST(
+                { url: '/get-handles', params: { type: value } },
+                (success, responseData) => {
+                    console.log("getHandlesForVanity > success:", success);
+                    console.log("getHandlesForVanity > responseData:", responseData);
+
+                    if (success && Array.isArray(responseData)) {
+                        console.log("success");
+                        // Locate the dynamically created select element
+                        const selectElement = document.querySelector(
+                            `[for='cart-vanity-handles${index}']`
+                        ).nextElementSibling;
+
+                        if (!selectElement) {
+                            console.error("Select element not found for cartItem:", cartItem);
+                            return;
+                        }
+
+                        // // Clear existing options except the first placeholder
+                        selectElement.innerHTML = '<option value="">Select Handles</option>';
+
+                        // // Add new options from the responseData array
+                        responseData.forEach((handle) => {
+                            console.log("handle > "+ handle);
+                            console.log("handle > "+ selectElement);
+                            const option = document.createElement("option");
+                            option.value = handle.product_id;
+                            option.textContent = handle.title;
+                            selectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error(
+                            "Invalid responseData or success flag is false. Response:",
+                            responseData
+                        );
+                    }
+                }
+            );
+        },
+
+        getKnobsForVanity(value, cartItem, index) {
+            let instance = this;
+            instance.axiosGETorPOST(
+                { url: '/get-knobs', params: { type: value } },
+                (success, responseData) => {
+                    console.log("getKnobsForVanity > success:", success);
+                    console.log("getKnobsForVanity > responseData:", responseData);
+
+                    if (success && Array.isArray(responseData)) {
+                        console.log("success");
+                        // Locate the dynamically created select element
+                        const selectElement = document.querySelector(
+                            `[for='cart-vanity-knobs${index}']`
+                        ).nextElementSibling;
+
+                        if (!selectElement) {
+                            console.error("Select element not found for cartItem:", cartItem);
+                            return;
+                        }
+
+                        // // Clear existing options except the first placeholder
+                        selectElement.innerHTML = '<option value="">Select Knobs</option>';
+
+                        // // Add new options from the responseData array
+                        responseData.forEach((knob) => {
+                            console.log("knob > "+ knob);
+                            console.log("knob > "+ selectElement);
+                            const option = document.createElement("option");
+                            option.value = knob.product_id;
+                            option.textContent = knob.title;
+                            selectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error(
+                            "Invalid responseData or success flag is false. Response:",
+                            responseData
+                        );
+                    }
+                }
+            );
+        },
+
+        getFillersForVanity(value, cartItem, index){
+            let instance = this;
+            instance.axiosGETorPOST(
+                { url: '/get-fillers', params: { type: value } },
+                (success, responseData) => {
+                    console.log("getFillersForVanity > success:", success);
+                    console.log("getFillersForVanity > responseData:", responseData);
+
+                    if (success && Array.isArray(responseData)) {
+                        console.log("success");
+                        // Locate the dynamically created select element
+                        const selectElement = document.querySelector(
+                            `[for='cart-vanity-filler${index}']`
+                        ).nextElementSibling;
+
+                        if (!selectElement) {
+                            console.error("Select element not found for cartItem:", cartItem);
+                            return;
+                        }
+
+                        // // Clear existing options except the first placeholder
+                        selectElement.innerHTML = '<option value="">Select Fillers</option>';
+
+                        // // Add new options from the responseData array
+                        responseData.forEach((filler) => {
+                            console.log("filler > "+ filler);
+                            console.log("filler > "+ selectElement);
+                            const option = document.createElement("option");
+                            option.value = filler.product_id;
+                            option.textContent = filler.title;
+                            selectElement.appendChild(option);
+                        });
+                    } else {
+                        console.error(
+                            "Invalid responseData or success flag is false. Response:",
+                            responseData
+                        );
+                    }
+                }
+            );
+        },
+
+        getCounterTopForVanity(value, cartItem, index){
+            let instance = this;
+            if(value == 'yes'){
+                instance.axiosGETorPOST(
+                    { url: '/get-counter-top', params: { type: value } },
+                    (success, responseData) => {
+                        console.log("getCounterTopForVanity > success:", success);
+                        console.log("getCounterTopForVanity > responseData:", responseData);
+    
+                        if (success && Array.isArray(responseData)) {
+                            console.log("success");
+                            // Locate the dynamically created select element
+                            const selectElement = document.querySelector(
+                                `[for='cart-vanity-counter-top${index}']`
+                            ).nextElementSibling;
+    
+                            if (!selectElement) {
+                                console.error("Select element not found for cartItem:", cartItem);
+                                return;
+                            }
+    
+                            // // Clear existing options except the first placeholder
+                            selectElement.innerHTML = '<option value="">Select Fillers</option>';
+    
+                            // // Add new options from the responseData array
+                            responseData.forEach((filler) => {
+                                console.log("filler > "+ filler);
+                                console.log("filler > "+ selectElement);
+                                const option = document.createElement("option");
+                                option.value = filler.product_id;
+                                option.textContent = filler.title;
+                                selectElement.appendChild(option);
+                            });
+                        } else {
+                            console.error(
+                                "Invalid responseData or success flag is false. Response:",
+                                responseData
+                            );
+                        }
+                    }
+                );
+            }
+        },
+
+        // getAllfillersWithoutZeroPrice() {
+        //     let instance = this;
+        //     instance.axiosGETorPOST(
+        //     {url: '/get-fillers'},
+        //     (success, responseData) => {
+        //         console.log(" getAllfillersWithoutZeroPrice > success :", success);
+        //         console.log(" getAllfillersWithoutZeroPrice > responseData :", responseData);
+        //         if (success) {
+        //             this.getFillers = responseData;
+        //             console.log(this.getFillers);
+        //             // tempData = responseData;
+        //             // _.mapValues(tempData, function (cashRegister) {
+        //             //     cashRegister.openingAmount = null;
+        //             //     cashRegister.openingTime = null;
+        //             //     cashRegister.closingAmount = null;
+        //             //     cashRegister.closingTime = null;
+        //             //     cashRegister.note = null;
+        //             //     cashRegister.showItemCollapse = false;
+        //             // });
+        //             // instance.cashRegisterList = tempData;
+        //         }
+        //         // if (instance.tempBranchID) {
+        //         //     let autoSelectCashRegister = _.filter(this.cashRegisterList, function (cashRegister) {
+        //         //         if (cashRegister.status === 'open' && _.includes(cashRegister.userID, instance.user.id.toString())) {
+
+        //         //             return cashRegister;
+        //         //         }
+        //         //     });
+        //         //     if (!_.isEmpty(autoSelectCashRegister)) {
+        //         //         instance.selectedCashRegisterID = autoSelectCashRegister[0].id;
+        //         //         instance.selectedCashRegisterName = autoSelectCashRegister[0].title;
+        //         //         instance.selectedCashRegisterBranchID = autoSelectCashRegister[0].branchID;
+        //         //         $('#branch-or-cash-register-select-modal').modal('hide');
+        //         //     }
+        //         //     instance.tempBranchID = null;
+        //         // }
+        //         // instance.getExpectedAmount(instance.selectedCashRegisterID);
+        //         // instance.hideCashRegisterPreLoader = true;
+        //         // instance.focusOnSearchBarWithOutTimeOut();
+        //     });
+
+        //     console.log(" this cart value from getAllfillersWithoutZeroPrice() function");
+        // },
+        axiosGETorPOSTAsync(instance, config) {
+            return new Promise((resolve, reject) => {
+                instance.axiosGETorPOST(config, (success, responseData) => {
+                    if (success) {
+                        resolve(responseData);
+                    } else {
+                        reject(new Error("Request failed or invalid response"));
+                    }
+                });
+            });
         },
     }
 }

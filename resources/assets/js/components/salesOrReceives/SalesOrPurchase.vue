@@ -300,7 +300,7 @@
                     </div>
                 </div>
             </div>
-            <div id="layoutTop" style="position: relative; width: 30rem;">
+            <div id="layoutTop" style="position: relative; width: 50rem;">
                 <div class="main-layout-card"
                      style="position: absolute; top: 0; bottom: 0; left: 0.75rem; right: 0; min-height: 450px;">
                     <cart-component
