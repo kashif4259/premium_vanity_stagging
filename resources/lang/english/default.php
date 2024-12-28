@@ -694,6 +694,7 @@ return array(
     'tax_order_type' => 'Order Type',
     'status' => 'Status',
     'tax_total' => 'Total tax',
+    'sub_total' => 'Sub Total',
     'due_total' => 'Total Due',
     'sales_date_edit' => 'Sales Date Edit',
     'profit_loss' => 'Profit / Loss',

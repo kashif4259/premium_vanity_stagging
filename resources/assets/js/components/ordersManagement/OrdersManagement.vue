@@ -317,6 +317,18 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                         sortable: true
                                     },
                                     {
+                                        title: "lang.sub_total",
+                                        key: "sub_total",
+                                        type: "text",
+                                        sortable: false
+                                    },
+                                    {
+                                        title: "lang.tax_total",
+                                        key: "total_tax",
+                                        type: "text",
+                                        sortable: false
+                                    },
+                                    {
                                         title: "lang.total",
                                         key: "total",
                                         type: "text",
@@ -328,12 +340,7 @@ import axiosGetPost from '../../helper/axiosGetPostCommon';
                                         type: "text",
                                         sortable: false
                                     },
-                                    {
-                                        title: "lang.tax_total",
-                                        key: "total_tax",
-                                        type: "text",
-                                        sortable: false
-                                    },
+                                    
                                     {
                                         title: "lang.action",
                                         type: "component",

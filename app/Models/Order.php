@@ -370,9 +370,9 @@ class Order extends BaseModel
             ->where('orders.type', '=', 'customer')
             ->whereDate('orders.date', '=', $today);
         if ($salesPermission != 'manage') {
-            return $todaySales->where('users.id', $userId)->sum('orders.total');
+            return $todaySales->where('users.id', $userId)->sum('orders.sub_total');
         }
-        return $todaySales->sum('orders.total');
+        return $todaySales->sum('orders.sub_total');
     }
 
     public static function monthlySold($date)
@@ -386,9 +386,9 @@ class Order extends BaseModel
             ->where('orders.type', '=', 'customer')
             ->whereDate('orders.date', '>=', $date);
         if ($salesPermission != 'manage') {
-            return $monthlySale->where('users.id', $userId)->sum('orders.total');
+            return $monthlySale->where('users.id', $userId)->sum('orders.sub_total');
         }
-        return $monthlySale->sum('orders.total');
+        return $monthlySale->sum('orders.sub_total');
     }
 
     public static function totalSold()
@@ -401,9 +401,9 @@ class Order extends BaseModel
             ->where('orders.order_type', '=', 'sales')
             ->where('orders.type', '=', 'customer');
         if ($salesPermission != 'manage') {
-            return $monthlySale->where('users.id', $userId)->sum('orders.total');
+            return $monthlySale->where('users.id', $userId)->sum('orders.sub_total');
         }
-        return $monthlySale->sum('orders.total');
+        return $monthlySale->sum('orders.sub_total');
     }
 
     public static function todayProfit($today)
