@@ -266,7 +266,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="mb-3">
+                <!-- <div class="mb-3">
                     <div class="form-row">
                         <h6 class="col">{{ trans('lang.language_settings') }}</h6>
                     </div>
@@ -294,7 +294,7 @@
                             >{{ trans('lang.clear_language_cache') }}</button>
                         </div>
                     </div>
-                </div>
+                </div> -->
                 <button
                     v-if="permission_key == 'manage'"
                     type="submit"
