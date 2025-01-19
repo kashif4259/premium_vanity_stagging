@@ -1057,15 +1057,16 @@ export default {
 
             if (this.cart.length > 0) {
                 this.cart.forEach(function (cartItem, index, cartArray) {
-
-                    if (parseInt(cartItem.productID) === parseInt(product.productID) && parseInt(cartItem.variantID) === parseInt(productVariantID)) {
-                        cartArray[index].quantity++;
-                        if (cartArray[index].quantity > product.variants[0].availableQuantity && instance.order_type === 'sales') {
-                            let variantTitle = product.variants[0].variant_title === 'default_variant' ? '' : `(${product.variants[0].variant_title})`;
-                            let alertMessage = product.title + ' ' + variantTitle + ' ' + instance.trans('lang.is_out_of_stock');
-                            instance.showWarningAlert(alertMessage);
+                    if(cartItem.categoryID !== 1){
+                        if (parseInt(cartItem.productID) === parseInt(product.productID) && parseInt(cartItem.variantID) === parseInt(productVariantID)) {
+                            cartArray[index].quantity++;
+                            if (cartArray[index].quantity > product.variants[0].availableQuantity && instance.order_type === 'sales') {
+                                let variantTitle = product.variants[0].variant_title === 'default_variant' ? '' : `(${product.variants[0].variant_title})`;
+                                let alertMessage = product.title + ' ' + variantTitle + ' ' + instance.trans('lang.is_out_of_stock');
+                                instance.showWarningAlert(alertMessage);
+                            }
+                            flag = 1;
                         }
-                        flag = 1;
                     }
                 });
             }
@@ -1125,7 +1126,8 @@ export default {
                                 counter_top_yes_no:"",
                                 counter_top:"",
                                 counter_top_side_splash:0,
-                                counter_top_back_splash:0
+                                counter_top_back_splash:0,
+                                counter_top_faucet_hole:""
                             }
                     }
 

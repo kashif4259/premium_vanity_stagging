@@ -179,7 +179,7 @@ export default {
         adjustedDiscount: 0,
         originalSoldProductForReturn: {},
         theOrderDetails:{},
-        taxPercentage:"0"
+        taxPercentage:0
     }),
     computed: {
         filteredHoldOrder() {
@@ -259,7 +259,8 @@ export default {
     created() {
         deleteCartItemsFromCookieOrDB(this.user, this.order_type, this.appVersion);
         this.cart = JSON.parse(this.cart_info);
-        console.log("this.cart =>", this.cart);
+        console.log("this.cart =>");
+        console.log(this.cart);
         
         this.setCartItemsToCookieOrDB();
         this.isTaxExcludedFromCart = this.user.tax_excluded !== "included";
@@ -383,7 +384,7 @@ export default {
         this.discount = this.theOrderDetails.all_discount;
         // this.deliveryCharges = this.theOrderDetails.delivery_charges;
         // this.newOverAllDiscount = this.theOrderDetails.all_discount;
- 
+        // this.taxPercentage = this.theOrderDetails.taxPercentage;
         this.axiosGet(
             "/get-areal-list",
             response => {
@@ -1088,14 +1089,30 @@ export default {
                     if(product.is_customization != '')
                     {
                         cartObjc.product_variations = {
-                                hole:"",
-                                filler:"",
-                                handles:"",
-                                drawer_side:"",
-                                wall_side:"",
-                                color:"",
-                                size:""
-                            }
+                            hole:"",
+                            // is_filler:"",
+                            // selected_filler:false,
+                            filler:"",
+                            handles:"",
+                            drawer_side:"",
+                            wall_side:"",
+                            color:"",
+                            filler_size:"",
+                            showFillerSize:false,
+                            handle_drawer_or_door:"",
+                            knobs_drawer_or_door:"",
+                            knobs:"",
+                            other_hanldes:"",
+                            other_knobs:"",
+                            filler_quantity:0,
+                            handles_quantity:0,
+                            knobs_quantity:0,
+                            counter_top_yes_no:"",
+                            counter_top:"",
+                            counter_top_side_splash:0,
+                            counter_top_back_splash:0,
+                            counter_top_faucet_hole:""
+                        }
                     }
 
                     this.cart.push(cartObjc);
@@ -2312,6 +2329,7 @@ export default {
             });
             this.grandTotal = Number((total + updatedTax).toFixed(2));
             this.tax = updatedTax;
+            this.taxPercentage = taxPercentage;
             instance.setCartItemsToCookieOrDB(1);
             this.makeFinalCart('done');
         }

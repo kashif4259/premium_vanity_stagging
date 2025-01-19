@@ -23,7 +23,8 @@ class Order extends BaseModel
         'total',
         'due_amount', 'type', 'profit', 'status', 'branch_id', 'transfer_branch_id', 'table_id', 'created_by', 'returned_invoice', 'return_type', 'customer_id', 'supplier_id', 'invoice_id', 'created_at', 'delivery_or_pickup', 'delivery_or_pickup_date', 'delivery_charges', 'order_status',
         'cart_info',
-        'tax_percentage'
+        'tax_percentage',
+        'updated_by'
     ];
 
     protected $casts = [

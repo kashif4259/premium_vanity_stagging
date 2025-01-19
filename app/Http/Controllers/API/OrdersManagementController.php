@@ -639,6 +639,7 @@ class OrdersManagementController extends Controller
             $orderType === 'sales' ? $orderData['customer_id'] = $id : $orderData['supplier_id'] = $id;
 
             $orderData['created_by'] = $createdBy;
+            // $orderData['updated_by'] = $createdBy;
             $orderData['branch_id'] = $userBranchId;
             if(isset($request->salesProductVariations) && !empty($request->salesProductVariations))
             {
@@ -1609,18 +1610,26 @@ class OrdersManagementController extends Controller
 
     public function getOrderDetails($id)
     {
-        $orderDetails = OrderItems::detailsById($id);
+        $order = Order::where('id', '=', $id)->first();
         
-        if(isset($orderDetails->product_custom_details) && !empty($orderDetails->product_custom_details))
-        {          
-            $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
-        }
+        // $orderDetails = $this->getInvoiceDetails($id, true);
+        
+        // $getOrderLogs = OrderLog::where('invoice_id', '=', $order->invoice_id)->get();
 
-        if (isset($orderDetails->customer) && $orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
+        // $order_items_logs = [];
 
-        // if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+        // foreach($getOrderLogs as $getOrderLog)
+        // {
+        //     $order_items_logs[] = $this->getInvoiceDetailsFromLogs($getOrderLog->invoice_id);
+        // }
 
-        return ['orderDetails' => $orderDetails];
+        // $order_items_logs = array_merge([], ...array_map(fn($collection) => $collection->all(), $order_items_logs));
+        $order_items_logs = $this->getInvoiceDetailsFromLogs($order->invoice_id);
+        return [
+            'invoice_id' => $order->invoice_id,
+            // 'order_items' => $orderDetails,
+            'order_items_logs' => $order_items_logs
+        ];
         
     }
 
@@ -1644,14 +1653,117 @@ class OrdersManagementController extends Controller
         
         foreach($orderItmes as &$orderDetails)
         {
-            if(isset($orderDetails->product_custom_details) && !empty($orderDetails->product_custom_details))
+            $custome_product_variations = [];
+            
+            $productDetails = Product::where('id', '=', $orderDetails->product_id)->first();
+
+            if(isset($orderDetails->product_variations) && !empty($orderDetails->product_variations))
             {          
-                $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
+                if($productDetails && $productDetails->category_id == 1)
+                {
+                    $product_variations = json_decode($orderDetails->product_variations, true);
+                    
+                    /**
+                     * Filler details
+                     */
+                    if(!empty($product_variations['filler']) && $product_variations['filler']
+                        && !empty($product_variations['filler_quantity']) && $product_variations['filler_quantity'] > 0
+                        && $product_variations['showFillerSize']
+                    )
+                    {
+                        $custome_product_variations['filler']['quantity'] = $product_variations['filler_quantity'];
+                        $custome_product_variations['filler']['size'] = $product_variations['filler_size'];
+                    }
+
+                    /**
+                     * Handles details
+                     */
+
+                    if(!empty($product_variations['handles']) && $product_variations['handles'] > 0
+                        && !empty($product_variations['handles_quantity']) && $product_variations['handles_quantity'] > 0
+                    )
+                    {
+                        $handleProduct = Product::where('id', '=', $product_variations['handles'])->first();
+
+                        $custome_product_variations['handles']['name'] = $handleProduct ? $handleProduct->title : null;
+                        $custome_product_variations['handles']['quantity'] = $product_variations['handles_quantity'];
+                        $custome_product_variations['handles']['handle_drawer_or_door'] = $product_variations['handle_drawer_or_door'];
+                    }
+                    else
+                    {
+                        if(isset($product_variations['other_hanldes']) && !empty($product_variations['other_hanldes']))
+                        {
+                            $custome_product_variations['handles']['name'] = $product_variations['other_hanldes'];
+                        }
+                        if(isset($product_variations['handles_quantity']) && !empty($product_variations['handles_quantity']))
+                        {
+                            $custome_product_variations['handles']['quantity'] = $product_variations['handles_quantity'];
+                        }
+                    }
+
+                    /**
+                     * Knobs Details
+                     */
+
+                    if(!empty($product_variations['knobs']) && $product_variations['knobs'] > 0
+                        && !empty($product_variations['knobs_quantity']) && $product_variations['knobs_quantity'] > 0
+                    )
+                    {
+                        $knobsProduct = Product::where('id', '=', $product_variations['knobs'])->first();
+
+                        $custome_product_variations['knobs']['name'] = $knobsProduct ? $knobsProduct->title : null;
+                        $custome_product_variations['knobs']['quantity'] = $product_variations['knobs_quantity'];
+                        $custome_product_variations['knobs']['knobs_drawer_or_door'] = $product_variations['knobs_drawer_or_door'];
+                    }
+                    else
+                    {
+                        if(isset($product_variations['other_knobs']) && !empty($product_variations['other_knobs']))
+                        {
+                            $custome_product_variations['handles']['name'] = $product_variations['other_knobs'];
+                        }
+                        if(isset($product_variations['knobs_quantity']) && !empty($product_variations['knobs_quantity']))
+                        {
+                            $custome_product_variations['handles']['quantity'] = $product_variations['knobs_quantity'];
+                        }
+                    }
+
+                    /**
+                     * Counter Top Details
+                     */
+
+                    if(!empty($product_variations['counter_top']) && $product_variations['counter_top'] > 0
+                        && !empty($product_variations['counter_top_yes_no']) && $product_variations['counter_top_yes_no'] == 'yes'
+                    )
+                    {
+                        $counterTopProduct = Product::where('id', '=', $product_variations['counter_top'])->first();
+
+                        $custome_product_variations['counter_top']['name'] = $counterTopProduct ? $counterTopProduct->title : null;
+                        $custome_product_variations['counter_top']['quantity'] = 1;
+                        $custome_product_variations['counter_top']['counter_top_back_splash'] = $product_variations['counter_top_back_splash'];
+                        $custome_product_variations['counter_top']['counter_top_faucet_hole'] = $product_variations['counter_top_faucet_hole'];
+                        $custome_product_variations['counter_top']['counter_top_side_splash'] = $product_variations['counter_top_side_splash'];
+                    }
+
+                    if(isset($product_variations['wall_side']) && !empty($product_variations['wall_side']))
+                    {
+                        $custome_product_variations['other_details']['wall_side'] = $product_variations['wall_side'];
+                    }
+                    if(isset($product_variations['drawer_side']) && !empty($product_variations['drawer_side']))
+                    {
+                        $custome_product_variations['other_details']['drawer_side'] = $product_variations['drawer_side'];
+                    }
+                
+                    $orderDetails->product_variations = $custome_product_variations;
+
+                }
+                else
+                {
+                    $orderDetails->product_variations = $custome_product_variations;
+                }
+
             }
-    
-            // if ($orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
-    
-            if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
+
+            $orderDetails->category_id = $productDetails->category_id;
 
             $no_item_purchases = OrderItems::getItemDiscountAndItemPurchased($orderDetails->id);
 
@@ -1668,33 +1780,142 @@ class OrdersManagementController extends Controller
         return $returndata;
     }
 
-    public function getInvoiceDetails($id)
+    public function getInvoiceDetails($id, $onlyData = false)
     {
         $orderItmes = OrderItems::getOrderItmesByIdForInvoice($id);
         
         foreach($orderItmes as &$orderDetails)
         {
-            if(isset($orderDetails->product_custom_details) && !empty($orderDetails->product_custom_details))
-            {          
-                $orderDetails->product_custom_details = json_decode($orderDetails->product_custom_details, true);
+            if($orderDetails->price > 0)
+            {
+                $custome_product_variations = [];
+    
+                $productDetails = Product::where('id', '=', $orderDetails->product_id)->first();
+    
+                if(isset($orderDetails->product_variations) && !empty($orderDetails->product_variations))
+                {          
+                    
+                    if($productDetails && $productDetails->category_id == 1)
+                    {
+                        $product_variations = json_decode($orderDetails->product_variations, true);
+                        
+                        /**
+                         * Filler details
+                         */
+                        if(!empty($product_variations['filler']) && $product_variations['filler']
+                            && !empty($product_variations['filler_quantity']) && $product_variations['filler_quantity'] > 0
+                            && $product_variations['showFillerSize']
+                        )
+                        {
+                            $custome_product_variations['filler']['quantity'] = $product_variations['filler_quantity'];
+                            $custome_product_variations['filler']['size'] = $product_variations['filler_size'];
+                        }
+    
+                        /**
+                         * Handles details
+                         */
+    
+                        if(!empty($product_variations['handles']) && $product_variations['handles'] > 0
+                            && !empty($product_variations['handles_quantity']) && $product_variations['handles_quantity'] > 0
+                        )
+                        {
+                            $handleProduct = Product::where('id', '=', $product_variations['handles'])->first();
+    
+                            $custome_product_variations['handles']['name'] = $handleProduct ? $handleProduct->title : null;
+                            $custome_product_variations['handles']['quantity'] = $product_variations['handles_quantity'];
+                            $custome_product_variations['handles']['handle_drawer_or_door'] = $product_variations['handle_drawer_or_door'];
+                        }
+                        else
+                        {
+                            if(isset($product_variations['other_hanldes']) && !empty($product_variations['other_hanldes']))
+                            {
+                                $custome_product_variations['handles']['name'] = $product_variations['other_hanldes'];
+                            }
+                            if(isset($product_variations['handles_quantity']) && !empty($product_variations['handles_quantity']))
+                            {
+                                $custome_product_variations['handles']['quantity'] = $product_variations['handles_quantity'];
+                            }
+                        }
+    
+                        /**
+                         * Knobs Details
+                         */
+    
+                        if(!empty($product_variations['knobs']) && $product_variations['knobs'] > 0
+                            && !empty($product_variations['knobs_quantity']) && $product_variations['knobs_quantity'] > 0
+                        )
+                        {
+                            $knobsProduct = Product::where('id', '=', $product_variations['knobs'])->first();
+    
+                            $custome_product_variations['knobs']['name'] = $knobsProduct ? $knobsProduct->title : null;
+                            $custome_product_variations['knobs']['quantity'] = $product_variations['knobs_quantity'];
+                            $custome_product_variations['knobs']['knobs_drawer_or_door'] = $product_variations['knobs_drawer_or_door'];
+                        }
+                        else
+                        {
+                            if(isset($product_variations['other_knobs']) && !empty($product_variations['other_knobs']))
+                            {
+                                $custome_product_variations['handles']['name'] = $product_variations['other_knobs'];
+                            }
+                            if(isset($product_variations['knobs_quantity']) && !empty($product_variations['knobs_quantity']))
+                            {
+                                $custome_product_variations['handles']['quantity'] = $product_variations['knobs_quantity'];
+                            }
+                        }
+    
+                        /**
+                         * Counter Top Details
+                         */
+    
+                        if(!empty($product_variations['counter_top']) && $product_variations['counter_top'] > 0
+                            && !empty($product_variations['counter_top_yes_no']) && $product_variations['counter_top_yes_no'] == 'yes'
+                        )
+                        {
+                            $counterTopProduct = Product::where('id', '=', $product_variations['counter_top'])->first();
+    
+                            $custome_product_variations['counter_top']['name'] = $counterTopProduct ? $counterTopProduct->title : null;
+                            $custome_product_variations['counter_top']['quantity'] = 1;
+                            $custome_product_variations['counter_top']['counter_top_back_splash'] = $product_variations['counter_top_back_splash'];
+                            $custome_product_variations['counter_top']['counter_top_faucet_hole'] = $product_variations['counter_top_faucet_hole'];
+                            $custome_product_variations['counter_top']['counter_top_side_splash'] = $product_variations['counter_top_side_splash'];
+                        }
+                        if(isset($product_variations['wall_side']) && !empty($product_variations['wall_side']))
+                        {
+                            $custome_product_variations['other_details']['wall_side'] = $product_variations['wall_side'];
+                        }
+                        if(isset($product_variations['drawer_side']) && !empty($product_variations['drawer_side']))
+                        {
+                            $custome_product_variations['other_details']['drawer_side'] = $product_variations['drawer_side'];
+                        }
+                    
+                        $orderDetails->product_variations = $custome_product_variations;
+    
+                    }
+                    else
+                    {
+                        $orderDetails->product_variations = $custome_product_variations;
+                    }
+                }
+        
+                $orderDetails->category_id = $productDetails->category_id;
+    
+                $no_item_purchases = OrderItems::getItemDiscountAndItemPurchased($orderDetails->id);
+    
+                $orderDetails->discount = $no_item_purchases->discount;
+    
+                $orderDetails->item_purchased = $no_item_purchases->item_purchased;
             }
-    
-            // if ($orderDetails->customer == '') $orderDetails->customer = Lang::get('lang.walk_in_customer');
-    
-            if($orderDetails->product_variations != '') $orderDetails->product_variations = json_decode($orderDetails->product_variations, true);
-
-            $no_item_purchases = OrderItems::getItemDiscountAndItemPurchased($orderDetails->id);
-
-            $orderDetails->discount = $no_item_purchases->discount;
-
-            $orderDetails->item_purchased = $no_item_purchases->item_purchased;
         }
         
-        $returndata = [
-            'order_items' => $orderItmes,
-            'header_info' => Order::getInvoiceDetailsHeaderInfo($id),
-            'order_footer' => Order::getInvoiceDetailsFooterInfo($id)
-        ];
+        if(!$onlyData){
+            $returndata = [
+                'order_items' => $orderItmes,
+                'header_info' => Order::getInvoiceDetailsHeaderInfo($id),
+                'order_footer' => Order::getInvoiceDetailsFooterInfo($id)
+            ];
+        }else{
+            $returndata = $orderItmes;
+        }
 
         return $returndata;
     }
@@ -1821,6 +2042,36 @@ class OrdersManagementController extends Controller
 //            $output['product'] = null;
 //            $output['shortcutKeyCollection'] = $product['shortcutKeyCollection'];
         }
+        //product_variations
+        // $cartResponse = json_decode($output['cartInfo'], true);
+        // foreach($cartResponse as $cartItem)
+        // {
+        //     if($cartItem['isCustomization'])
+        //     {
+        //         $productVariations = $cartItem['product_variations'];
+        //         $counter_top = $productVariations['counter_top'];
+        //         $knobs = $productVariations['knobs'];
+        //         $handles = $productVariations['handles'];
+        //     }
+        // }
+        // $parentRecord = $cartResponse[0];
+        // // dd($parentRecord);
+        // $productVariations = $parentRecord['product_variations'];
+
+        // // Check conditions
+        // $counterTopCondition = !empty($productVariations['counter_top']) && $productVariations['counter_top_yes_no'] === 'yes';
+        // $handleCondition = !empty($productVariations['handle_drawer_or_door']) && !empty($productVariations['handles']);
+        // $knobCondition = !empty($productVariations['knobs_drawer_or_door']) && !empty($productVariations['knobs']);
+
+        // if ($handleCondition && $counterTopCondition && $knobCondition) 
+        // {
+        //     $output['cartInfo'] = json_encode([$cartResponse], true);
+        //     // dd($output['cartInfo']);
+        //     // $handlesInfo = Product::where('id', '=', $productVariations['handles'])->first();
+        //     // dd($handlesInfo);
+        //     // $knobsInfo = [];
+        //     // $counterTop = [];    
+        // }
 
         return view('sales.UpdateOrder', $output);
     }
@@ -2063,7 +2314,8 @@ class OrdersManagementController extends Controller
 
             $orderType === 'sales' ? $orderData['customer_id'] = $id : $orderData['supplier_id'] = $id;
 
-            $orderData['created_by'] = $createdBy;
+            $orderData['created_by'] = $getOldOrderInformation['created_by'];
+            $orderData['updated_by'] = $createdBy;
             $orderData['branch_id'] = $userBranchId;
             if(isset($request->salesProductVariations) && !empty($request->salesProductVariations))
             {
@@ -2154,8 +2406,8 @@ class OrdersManagementController extends Controller
 
             $orderType == 'sales' ? $orders['customer_id'] = $id : $orders['supplier_id'] = $id;
 
-            $orders['created_by'] = $createdBy;
-
+            $orders['created_by'] = $getOldOrderInformation['created_by'];
+            $orders['updated_by'] = $createdBy;
             if ($orders['table_id']) {
                 RestaurantTable::updateTableStatus($orders['table_id'], 'available');
             }
@@ -2180,6 +2432,15 @@ class OrdersManagementController extends Controller
                 $cart['discount'] = 0;
             }
 
+            if(isset($cart['product_variations']) && !empty($cart['product_variations']))
+            {
+                $product_custom_details = json_encode($cart['product_variations'], true);
+            }
+            else
+            {
+                $product_custom_details = '';
+            }
+
             array_push($orderItems, [
                 'product_id' => $cart['productID'],
                 'variant_id' => $cart['variantID'],
@@ -2192,7 +2453,8 @@ class OrdersManagementController extends Controller
                 'order_id' => $orderID,
                 'note' => $cart['cartItemNote'],
                 'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
+                'updated_at' => date('Y-m-d H:i:s'),
+                'product_custom_details' => (!empty($product_custom_details) ? $product_custom_details : null)
             ]);
 
             // for update isNotify product_variant
@@ -2365,6 +2627,7 @@ class OrdersManagementController extends Controller
                     $invoiceTemplateData = $invoiceTemplateEmail->getInvoiceTemplateToPrint($orderID, $salesOrReceivingType, $transferBranchName, $cashRegister, $orderType, 'email');
 
                     $autoEmailReceive = Setting::getSettingValue('auto_email_receive')->setting_value;
+                    // dd($orderID, $cashRegister);
                     $orderDetails = Order::orderDetails($orderID, $cashRegister);
                     // Sms receive to customer
                     $autoSmsReceive = Setting::getSettingValue('sms_recive_to_customer')->setting_value;
@@ -2478,5 +2741,136 @@ class OrdersManagementController extends Controller
     public function insertOrderItemLog($data)
     {
         return OrderItemLog::insertData($data);
+    }
+
+    public function getInvoiceDetailsFromLogs($invoice_id)
+    {
+        $orderItmes = OrderItemLog::getOrderItmesByIdForInvoice($invoice_id);
+        
+        foreach($orderItmes as &$orderDetails)
+        {
+            if($orderDetails->price > 0)
+            {
+                $custome_product_variations = [];
+    
+                $productDetails = Product::where('id', '=', $orderDetails->product_id)->first();
+                
+                if(isset($orderDetails->product_variations) && !empty($orderDetails->product_variations))
+                {          
+                    
+                    if($productDetails && $productDetails->category_id == 1)
+                    {
+                        $product_variations = json_decode($orderDetails->product_variations, true);
+                        
+                        /**
+                         * Filler details
+                         */
+                        if(!empty($product_variations['filler']) && $product_variations['filler']
+                            && !empty($product_variations['filler_quantity']) && $product_variations['filler_quantity'] > 0
+                            && $product_variations['showFillerSize']
+                        )
+                        {
+                            $custome_product_variations['filler']['quantity'] = $product_variations['filler_quantity'];
+                            $custome_product_variations['filler']['size'] = $product_variations['filler_size'];
+                        }
+    
+                        /**
+                         * Handles details
+                         */
+    
+                        if(!empty($product_variations['handles']) && $product_variations['handles'] > 0
+                            && !empty($product_variations['handles_quantity']) && $product_variations['handles_quantity'] > 0
+                        )
+                        {
+                            $handleProduct = Product::where('id', '=', $product_variations['handles'])->first();
+    
+                            $custome_product_variations['handles']['name'] = $handleProduct ? $handleProduct->title : null;
+                            $custome_product_variations['handles']['quantity'] = $product_variations['handles_quantity'];
+                            $custome_product_variations['handles']['handle_drawer_or_door'] = $product_variations['handle_drawer_or_door'];
+                        }
+                        else
+                        {
+                            if(isset($product_variations['other_hanldes']) && !empty($product_variations['other_hanldes']))
+                            {
+                                $custome_product_variations['handles']['name'] = $product_variations['other_hanldes'];    
+                            }
+                            if(!empty($product_variations['handles_quantity']))
+                            {
+                                $custome_product_variations['handles']['quantity'] = $product_variations['handles_quantity'];
+                            }
+                        }
+    
+                        /**
+                         * Knobs Details
+                         */
+    
+                        if(!empty($product_variations['knobs']) && $product_variations['knobs'] > 0
+                            && !empty($product_variations['knobs_quantity']) && $product_variations['knobs_quantity'] > 0
+                        )
+                        {
+                            $knobsProduct = Product::where('id', '=', $product_variations['knobs'])->first();
+    
+                            $custome_product_variations['knobs']['name'] = $knobsProduct ? $knobsProduct->title : null;
+                            $custome_product_variations['knobs']['quantity'] = $product_variations['knobs_quantity'];
+                            $custome_product_variations['knobs']['knobs_drawer_or_door'] = $product_variations['knobs_drawer_or_door'];
+                        }
+                        else
+                        {
+                            if(isset($product_variations['other_knobs']) && !empty($product_variations['other_knobs']))
+                            {
+                                $custome_product_variations['knobs']['name'] = $product_variations['other_knobs'];
+                            }
+
+                            if(isset($product_variations['knobs_quantity']) && !empty($product_variations['knobs_quantity']))
+                            {
+                                $custome_product_variations['knobs']['quantity'] = $product_variations['knobs_quantity'];
+                            }
+                        }
+    
+                        /**
+                         * Counter Top Details
+                         */
+    
+                        if(!empty($product_variations['counter_top']) && $product_variations['counter_top'] > 0
+                            && !empty($product_variations['counter_top_yes_no']) && $product_variations['counter_top_yes_no'] == 'yes'
+                        )
+                        {
+                            $counterTopProduct = Product::where('id', '=', $product_variations['counter_top'])->first();
+    
+                            $custome_product_variations['counter_top']['name'] = $counterTopProduct ? $counterTopProduct->title : null;
+                            $custome_product_variations['counter_top']['quantity'] = 1;
+                            $custome_product_variations['counter_top']['counter_top_back_splash'] = $product_variations['counter_top_back_splash'];
+                            $custome_product_variations['counter_top']['counter_top_faucet_hole'] = $product_variations['counter_top_faucet_hole'];
+                            $custome_product_variations['counter_top']['counter_top_side_splash'] = $product_variations['counter_top_side_splash'];
+                        }
+
+                        if(isset($product_variations['wall_side']) && !empty($product_variations['wall_side']))
+                        {
+                            $custome_product_variations['other_details']['wall_side'] = $product_variations['wall_side'];
+                        }
+                        if(isset($product_variations['drawer_side']) && !empty($product_variations['drawer_side']))
+                        {
+                            $custome_product_variations['other_details']['drawer_side'] = $product_variations['drawer_side'];
+                        }
+                    
+                        $orderDetails->product_variations = $custome_product_variations;
+                    }
+                    else
+                    {
+                        $orderDetails->product_variations = $custome_product_variations;
+                    }
+                }
+        
+                $orderDetails->category_id = $productDetails->category_id;
+    
+                $no_item_purchases = OrderItemLog::getItemDiscountAndItemPurchased($orderDetails->id);
+    
+                $orderDetails->discount = $no_item_purchases->discount;
+    
+                $orderDetails->item_purchased = $no_item_purchases->item_purchased;
+            }
+        }
+        
+        return $orderItmes;
     }
 }

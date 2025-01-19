@@ -461,6 +461,8 @@ class SalesController extends Controller
         $returnProductProfit = 0;
         $emailSent = false;
 
+        // dd($request->cart);
+
         /*Section for Return Order product in cart*/
         if ($request->salesOrReturnType == 'returns') {
             $orderItemProductCount = 0;

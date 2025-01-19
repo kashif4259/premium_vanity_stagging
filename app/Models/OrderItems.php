@@ -782,7 +782,9 @@ class OrderItems extends BaseModel
             // 'product_categories.name as cat_name',
             // 'product_brands.name as brand_name',
             'products.description as product_des',
-            'order_items.note'
+            'order_items.note',
+            'order_items.product_id',
+            'order_items.price as price'
             // 'order_items.type',
             // DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by"),
             // DB::raw("users.id as user_id"),
@@ -827,7 +829,8 @@ class OrderItems extends BaseModel
             // 'product_categories.name as cat_name',
             // 'product_brands.name as brand_name',
             'products.description as product_des',
-            'order_items.note'
+            'order_items.note',
+            'order_items.product_id'
             // 'order_items.type',
             // DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by"),
             // DB::raw("users.id as user_id"),
@@ -835,9 +838,10 @@ class OrderItems extends BaseModel
             // DB::raw("customers.id as customer_id")
             // DB::raw("((sum(((abs(order_items.quantity)*order_items.price)* order_items.discount)/100))+ 
             // (select abs(order_items.sub_total) from order_items where order_items.type ='discount' and order_items.order_id = orders.id)) AS discount")
-            // DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased')
+            // DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased'),
         )
         ->where('orders.order_type', '=', 'sales')
+        ->where('order_items.price', '>', '0')
         ->where('order_items.order_id', '=', $order_id)->get();
 
         return $query;

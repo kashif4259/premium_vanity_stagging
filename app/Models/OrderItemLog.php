@@ -129,4 +129,58 @@ class OrderItemLog extends BaseModel
         ->where('order_items.order_id', '=', $order_id)->get();
     }
 
+    public static function getOrderItmesByIdForInvoice($invoice_id)
+    {
+        $query = OrderItemLog::query()->join('order_logs', 'order_logs.id', '=', 'order_item_logs.order_id')
+        ->join('products', 'products.id', '=', 'order_item_logs.product_id')
+        ->join('users', 'users.id', '=', 'order_logs.created_by')
+        ->leftJoin('users as u2', 'u2.id', '=', 'order_logs.updated_by')
+        // ->leftJoin('taxes', 'taxes.id', '=', 'order_items.tax_id')
+        // ->leftJoin('customers', 'customers.id', '=', 'orders.customer_id')
+        // ->leftJoin('branches', 'branches.id', 'orders.transfer_branch_id')
+        // ->leftJoin('product_categories', 'product_categories.id', '=', 'products.category_id')
+        // ->leftJoin('product_brands', 'product_brands.id', '=', 'products.brand_id')
+        ->select(
+            'order_item_logs.id',
+            'order_item_logs.order_id',
+            // 'branches.name as transfer_branch_name',
+             DB::raw('DATE_FORMAT(order_logs.updated_at,"%m/%d/%Y") AS date '),
+             DB::raw('DATE_FORMAT(order_logs.created_at,"%m/%d/%Y") AS created_at '),
+            // 'orders.type',
+            // 'orders.sub_total',
+            // 'orders.total_tax as tax',
+            // 'orders.total',
+            // 'orders.invoice_id',
+            // 'orders.due_amount',
+            'order_item_logs.price as price',
+            'order_item_logs.product_custom_details as product_variations',
+            'order_logs.order_status',
+            // 'products.imageURL',
+            'products.title',
+            // 'product_categories.name as cat_name',
+            // 'product_brands.name as brand_name',
+            'products.description as product_des',
+            'order_item_logs.note',
+            'order_item_logs.product_id',
+            DB::raw('CONCAT(users.first_name, users.last_name) AS created_by'),
+            DB::raw('CONCAT(u2.first_name, u2.last_name) AS updated_by')
+            // 'order_items.type',
+            // DB::raw("CONCAT(users.first_name,' ',users.last_name)  AS created_by"),
+            // DB::raw("users.id as user_id"),
+            // DB::raw("CONCAT(customers.first_name,' ',customers.last_name)  AS customer"),
+            // DB::raw("customers.id as customer_id")
+            // DB::raw("((sum(((abs(order_items.quantity)*order_items.price)* order_items.discount)/100))+ 
+            // (select abs(order_items.sub_total) from order_items where order_items.type ='discount' and order_items.order_id = orders.id)) AS discount")
+            // DB::raw('CONVERT(abs(SUM(CASE WHEN order_items.type = "discount" THEN 0 ELSE order_items.quantity END)),SIGNED INTEGER) as item_purchased'),
+        )
+        ->where('order_logs.order_type', '=', 'sales')
+        ->where('order_item_logs.price', '>', '0')
+        ->where('order_logs.invoice_id', '=', $invoice_id)
+        ->orderBy('order_logs.updated_at', 'desc')
+        ->get();
+
+        return $query;
+    }
+
+    
 }

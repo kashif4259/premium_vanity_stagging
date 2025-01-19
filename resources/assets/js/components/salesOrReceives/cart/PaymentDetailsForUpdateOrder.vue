@@ -82,7 +82,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="cartItem in finalCart.cart">
+                                <tr v-for="cartItem in finalCart.cart" v-if="cartItem.price > 0">
                                     <td class="cart-summary-table text-left">
                                         {{ cartItem.productTitle }}
                                         <br>

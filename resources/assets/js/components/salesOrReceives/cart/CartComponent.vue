@@ -167,304 +167,335 @@
                 </h6>
             </div>
         </div>
+
         <div id="cart-section-2" class="cart-items-wrapper"
              :class="{'h-100 d-flex align-items-center justify-content-center' : parseInt(cart.length) === 0}">
             <span v-if="parseInt(cart.length) === 0">
                 {{ trans('lang.empty_cart') }}
             </span>
             <div v-else class="cart-item-container py-1" v-for="(cartItem,index) in cart"
-                 :class="{'active-cart-item': cartItem.showItemCollapse }">
-                 <template v-if="cartItem.orderType != 'delivery'">
-                <div class="form-row mx-0 px-1 cart-item">
-                    <div class="col-6 p-0 cart-item-btn"
-                         @click.prevent="cartItemCollapse(index,cartItem.variantID)">
-                        <div class="row mx-0 my-auto">
-                            <div class="col-1 p-0 m-auto">
-                                <i class="la la-chevron-circle-right la-2x cart-icon"
-                                   :class="{'cart-icon-rotate':cartItem.showItemCollapse}"></i>
-                            </div>
-                            <div class="col-11  my-auto mx-0 pr-0">
-                                <div class="row mx-0 cart-item-title"
-                                     :class="{cartProduct: cartItem.productID == activeProductId && cartItem.variantID == activeVariantId && cartItem.orderType !== 'discount'}">
-                                    <div class="col-12 pl-1 p-0 my-auto mx-0">
-                                        {{ cartItem.productTitle }}
-                                        <br>
+                 :class="{'active-cart-item': cartItem.showItemCollapse }" >
+                 
+                 <template>
+                    <div class="form-row mx-0 px-1 cart-item">
+                        <div class="col-6 p-0 cart-item-btn"
+                            @click.prevent="cartItemCollapse(index,cartItem.variantID)">
+                            <div class="row mx-0 my-auto">
+                                <div class="col-1 p-0 m-auto">
+                                    <i class="la la-chevron-circle-right la-2x cart-icon"
+                                    :class="{'cart-icon-rotate':cartItem.showItemCollapse}"></i>
+                                </div>
+                                <div class="col-11  my-auto mx-0 pr-0">
+                                    <div class="row mx-0 cart-item-title"
+                                        :class="{cartProduct: cartItem.productID == activeProductId && cartItem.variantID == activeVariantId && cartItem.orderType !== 'discount'}">
+                                        <div class="col-12 pl-1 p-0 my-auto mx-0">
+                                            {{ cartItem.productTitle }}
+                                            <br>
 
-                                        <span
-                                            v-if="cartItem.variantTitle && cartItem.variantTitle !== 'default_variant' && cartItem.orderType !== 'discount'">( {{
-                                                cartItem.variantTitle
-                                            }} )</span>
+                                            <span
+                                                v-if="cartItem.variantTitle && cartItem.variantTitle !== 'default_variant' && cartItem.orderType !== 'discount'">( {{
+                                                    cartItem.variantTitle
+                                                }} )</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="col-3 my-auto px-0 ml-3 mr-0">
-                        <div class="d-flex justify-content-between mr-1 cart-quantity">
-                            <div class="pl-0 mx-0">
-                                <a href="#"
-                                   :class="{disabled:cartItem.orderType ==='discount' || (salesOrReturnType ==='returns' && order_type === 'sales') || (order_type === 'receiving' && receiveOrReturnType === 'returns')}"
-                                   @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'-')">
-                                    <i class="la la-minus-circle la-2x cart-icon-color"></i>
-                                </a>
+                        <div class="col-3 my-auto px-0 ml-3 mr-0">
+                            <div class="d-flex justify-content-between mr-1 cart-quantity">
+                                <div class="pl-0 mx-0" v-if="cartItem.categoryID !== 1">
+                                    <a href="#"
+                                    :class="{disabled:cartItem.orderType ==='discount' || (salesOrReturnType ==='returns' && order_type === 'sales') || (order_type === 'receiving' && receiveOrReturnType === 'returns')}"
+                                    @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'-')">
+                                        <i class="la la-minus-circle la-2x cart-icon-color"></i>
+                                    </a>
+                                </div>
+                                <div class="align-self-center">
+                                    {{ numberFormatting(cartItem.quantity) }}
+                                </div>
+                                <div class="" v-if="cartItem.categoryID !== 1">
+                                    <a href="#"
+                                    :class="{disabled:cartItem.orderType ==='discount'}"
+                                    @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'+')">
+                                        <i class="la la-plus-circle la-2x cart-icon-color"></i>
+                                    </a>
+                                </div>
                             </div>
-                            <div class="align-self-center">
-                                {{ numberFormatting(cartItem.quantity) }}
+                        </div>
+                        <div class="col-3 d-flex pr-0 pl-0 cart-calculatedPrice">
+                            <div class="align-self-center ml-auto">
+                                <span>{{ numberFormat(cartItem.calculatedPrice) }}</span>
                             </div>
-                            <div class="">
-                                <a href="#"
-                                   :class="{disabled:cartItem.orderType ==='discount'}"
-                                   @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'+')">
-                                    <i class="la la-plus-circle la-2x cart-icon-color"></i>
-                                </a>
+                            <div v-if="salesOrReturnType !== 'returns'" class="align-self-center ml-2">
+                                <a href="#" class="red-text"
+                                :class="{disabled:cart.length == 1 && !isConnected && offline == 1}"
+                                @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'delete')"><i
+                                    class="la la-trash del-icon-color"></i></a>
+                            </div>
+                            <div v-else class="align-self-center ml-2">
+                                <a href="#" class="red-text"
+                                :class="{disabled: (cart.length == 2 && !isConnected && offline == 1) || (cartItem.orderType === 'discount' && (cart.length == return_cart_length || cart.length == 2))}"
+                                @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'delete')"><i
+                                    class="la la-trash del-icon-color"></i></a>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3 d-flex pr-0 pl-0 cart-calculatedPrice">
-                        <div class="align-self-center ml-auto">
-                            <span>{{ numberFormat(cartItem.calculatedPrice) }}</span>
-                        </div>
-                        <div v-if="salesOrReturnType !== 'returns'" class="align-self-center ml-2">
-                            <a href="#" class="red-text"
-                               :class="{disabled:cart.length == 1 && !isConnected && offline == 1}"
-                               @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'delete')"><i
-                                class="la la-trash del-icon-color"></i></a>
-                        </div>
-                        <div v-else class="align-self-center ml-2">
-                            <a href="#" class="red-text"
-                               :class="{disabled: (cart.length == 2 && !isConnected && offline == 1) || (cartItem.orderType === 'discount' && (cart.length == return_cart_length || cart.length == 2))}"
-                               @click.prevent="cartItemButtonAction(cartItem.productID,cartItem.variantID,cartItem.orderType,'delete')"><i
-                                class="la la-trash del-icon-color"></i></a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Start row 1-->
-                <div class="form-row mx-0 px-2  collapse-animation"
-                     :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
-                    <div class="form-group pl-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']">
-                        <label :for="'cart-item-quantity'+index" class="label-in-cart ">
-                            {{ trans('lang.quantity') }}</label>
-                        <payment-input :id="'cart-item-quantity'+index"
-                                       :inputValue="numberFormatting(cartItem.quantity)" :index="index"
-                                       @input="setQuantityInCart">
-                        </payment-input>
-                    </div>
-                    <div class="form-group pr-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']"
-                         v-if="order_type ==='receiving' || manage_price == 1 ">
-                        <label :for="'cart-item-price'+index" class="label-in-cart">{{ trans('lang.price') }}</label>
-                        <payment-input :id="'cart-item-price'+index"
-                                       :inputValue="cartItem.unformPrice" :index="index"
-                                       @input="setProductNewPrice"></payment-input>
-                    </div>
-                    <div class="form-group pr-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']"
-                         v-if="checkDiscountType()">
-                        <label :for="'cart-item-discount'+index" class="label-in-cart w-100">
-                            {{ trans('lang.item_discount') }} (%)
-                        </label>
-                        <div class="position-relative">
-                            <payment-input :id="'cart-item-discount'+index" v-model="cartItem.discount"
-                                           :inputValue="discount"
-                                           @input="setCartItemsToCookieOrDB(1)">
+                    
+                    <!-- Start row 1-->
+                    <div class="form-row mx-0 px-2  collapse-animation"
+                        :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                        <div class="form-group pl-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']" v-if="cartItem.categoryID !== 1">
+                            <label :for="'cart-item-quantity'+index" class="label-in-cart ">
+                                {{ trans('lang.quantity') }}</label>
+                            <payment-input :id="'cart-item-quantity'+index"
+                                        :inputValue="numberFormatting(cartItem.quantity)" :index="index"
+                                        @input="setQuantityInCart">
                             </payment-input>
                         </div>
-                    </div>
-                </div> <!-- End row 1-->
+                        <div class="form-group pr-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']"
+                            v-if="order_type ==='receiving' || manage_price == 1 ">
+                            <label :for="'cart-item-price'+index" class="label-in-cart">{{ trans('lang.price') }}</label>
+                            <payment-input :id="'cart-item-price'+index"
+                                        :inputValue="cartItem.unformPrice" :index="index"
+                                        @input="setProductNewPrice"></payment-input>
+                        </div>
+                        <div class="form-group pr-0 mb-zero" :class="[checkDiscount() ? 'col-4':'col-6']"
+                            v-if="checkDiscountType()">
+                            <label :for="'cart-item-discount'+index" class="label-in-cart w-100">
+                                {{ trans('lang.item_discount') }} (%)
+                            </label>
+                            <div class="position-relative">
+                                <payment-input :id="'cart-item-discount'+index" v-model="cartItem.discount"
+                                            :inputValue="discount"
+                                            @input="setCartItemsToCookieOrDB(1)">
+                                </payment-input>
+                            </div>
+                        </div>
+                    </div> <!-- End row 1-->
 
-                <!-- Start Row 2-->
-                <div class="form-row mx-0 px-2  collapse-animation"
-                     :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                    <!-- Start Row 2-->
+                    <div class="form-row mx-0 px-2  collapse-animation"
+                        :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                        
+                        <div class="col-12 p-0 pb-2">
+                            <label :for="'cart-item-note'+index" class="label-in-cart">{{ trans('lang.note') }}</label>
+                            <textarea :id="'cart-item-note'+index"
+                                    @keyup="setCartItemsToCookieOrDB(1)"
+                                    class="form-control"
+                                    v-model="cartItem.cartItemNote">
+                            </textarea>
+                        </div>
+                    </div> <!-- End row 2-->
                     
-                     <div class="col-12 p-0 pb-2">
-                        <label :for="'cart-item-note'+index" class="label-in-cart">{{ trans('lang.note') }}</label>
-                        <textarea :id="'cart-item-note'+index"
-                                @keyup="setCartItemsToCookieOrDB(1)"
-                                class="form-control"
-                                v-model="cartItem.cartItemNote">
-                        </textarea>
-                    </div>
-                </div> <!-- End row 2-->
-                
-                <div v-if="cartItem.categoryID == 1">
-                    <!-- Start row 4 For Drawers-->
-                    <div class="form-row mx-0 px-2  collapse-animation"
-                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
-                         <div class="form-group pl-0 mb-zero col-6" v-if="cartItem.isCustomization">
-                            <label :for="'cart-drawerside-on-drawers-door' + index" class="label-in-cart">
-                                Drawers Side
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.drawer_side">
-                                <option value="">Select Value</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
-                            </select>
-                        </div>
-                        
-                    </div><!-- End row 4-->
+                    <div v-if="cartItem.categoryID == 1">
+                        <!-- Start row 4 For Drawers-->
+                        <div class="form-row mx-0 px-2  collapse-animation"
+                            :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                            <div class="form-group pl-0 mb-zero col-6" v-if="cartItem.isCustomization">
+                                <label :for="'cart-drawerside-on-drawers-door' + index" class="label-in-cart">
+                                    Drawers Side
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.drawer_side">
+                                    <option value="">Select Value</option>
+                                    <option value="left">Left</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
 
-                    <!-- start row 3 For Fillers -->
-                    <div class="form-row mx-0 px-2  collapse-animation"
-                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
-                        
-                         <div class="form-group pl-0 mb-zero col-4"  v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-filler-quantity'+index" class="label-in-cart ">
-                                Filler Quantity</label>
-                                <select class="custom-select custom-tax-calculate" @change="fillerSize($event.target.value, cartItem, index)" v-model="cartItem.product_variations.filler_quantity">
-                                    <option value="0">Select Quantity</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
+                            <div class="form-group pl-0 mb-zero col-6" v-if="cartItem.isCustomization">
+                                <label :for="'cart-wallside' + index" class="label-in-cart">
+                                    Wall Side
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.wall_side">
+                                    <option value="">Select Value</option>
+                                    <option value="left">Left</option>
+                                    <option value="right">Right</option>
+                                    <option value="wall_to_wall">Wall to Wall</option>
+                                    <option value="free_standing">Freestanding</option>
                                 </select>
-                        </div>
-    
-                         <div class="form-group pl-0 mb-zero col-4"  v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-filler'+index" class="label-in-cart ">
-                                Select Filler</label>
-                                <select class="custom-select custom-tax-calculate" v-model="cartItem.product_variations.filler" >
-                                    <option value="">Select Filler</option>
+                            </div>
+                            
+                        </div><!-- End row 4-->
+
+                        <!-- start row 3 For Fillers -->
+                        <div class="form-row mx-0 px-2  collapse-animation"
+                            :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                            
+                            <div class="form-group pl-0 mb-zero col-4"  v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-filler'+index" class="label-in-cart ">
+                                    Select Filler</label>
+                                    <select class="custom-select custom-tax-calculate" v-model="cartItem.product_variations.filler" @change="fillerSize($event.target.value, cartItem, index)">
+                                        <option value="">Select Filler</option>
+                                        <option value="yes">Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                            </div>
+                            
+                            <div class="form-group pl-0 mb-zero col-4"  v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-filler-quantity'+index" class="label-in-cart ">
+                                    Filler Quantity</label>
+                                    <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.filler_quantity">
+                                        <option value="0">Select Quantity</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                            </div>
+        
+                            <div class="form-group pl-0 mb-zero col-4" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-filler-size'+index" class="label-in-cart ">
+                                    {{ trans('lang.vanity_size') }}</label>
+                                    <input type="text"
+                                        step="0.01"
+                                        min="0"
+                                        class="form-control" value="0.5" v-model="cartItem.product_variations.filler_size" @input="validateNumber(cartItem)">
+                            </div>
+                        </div><!-- End row 3-->
+        
+                        <!-- Start row 4 For Handles-->
+                        <div class="form-row mx-0 px-2  collapse-animation"
+                            :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-handles-on-drawers-door' + index" class="label-in-cart">
+                                    Handles On Drawers/Door
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.handle_drawer_or_door" @change="getHandlesForVanity($event.target.value, cartItem, index)">
+                                    <option value="">Select Value</option>
+                                    <option value="drawers">Drawers</option>
+                                    <option value="door">Door</option>
+                                    <option value="both">Both</option>
                                 </select>
-                        </div>
-    
-                        <div class="form-group pl-0 mb-zero col-4" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-filler-size'+index" class="label-in-cart ">
-                                {{ trans('lang.vanity_size') }}</label>
+                            </div>
+        
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-handles' + index" class="label-in-cart">
+                                    Handles
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.handles">
+                                    <option value="">Select Handles</option>
+                                </select>
+                            </div>
+        
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-handles-quantity' + index" class="label-in-cart">
+                                    Quantity
+                                </label>
                                 <input type="text"
-                                    step="0.01"
-                                    min="0"
-                                    class="form-control" value="0.5" v-model="cartItem.product_variations.filler_size" @input="validateNumber(cartItem)">
-                        </div>
-                    </div><!-- End row 3-->
-    
-                    <!-- Start row 4 For Handles-->
-                    <div class="form-row mx-0 px-2  collapse-animation"
-                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
-                         <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-handles-on-drawers-door' + index" class="label-in-cart">
-                                Handles On Drawers/Door
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.handle_drawer_or_door" @change="getHandlesForVanity($event.target.value, cartItem, index)">
-                                <option value="">Select Value</option>
-                                <option value="drawers">Drawers</option>
-                                <option value="door">Door</option>
-                            </select>
-                        </div>
-    
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-handles' + index" class="label-in-cart">
-                                Handles
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.handles">
-                                <option value="">Select Handles</option>
-                            </select>
-                        </div>
-    
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-handles-quantity' + index" class="label-in-cart">
-                                Quantity
-                            </label>
-                            <input type="text"
-                                class="form-control" v-model="cartItem.product_variations.handles_quantity">
-                        </div>
-    
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-handles-others' + index" class="label-in-cart">
-                                Others
-                            </label>
-                            <input type="text"
-                                class="form-control" v-model="cartItem.product_variations.other_hanldes">
-                        </div>
-    
-                    </div><!-- End row 4-->
-    
-                    <!-- Start row 4 For Knobs-->
-                    <div class="form-row mx-0 px-2  collapse-animation"
-                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
-                         <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-knobs-on-drawers-door' + index" class="label-in-cart">
-                                Knobs On Drawers/Door
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.knobs_drawer_or_door" @change="getKnobsForVanity($event.target.value, cartItem, index)">
-                                <option value="">Select Value</option>
-                                <option value="drawers">Drawers</option>
-                                <option value="door">Door</option>
-                            </select>
-                        </div>
-    
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-knobs' + index" class="label-in-cart">
-                                Knobs
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.knobs">
-                                <option value="">Select Knobs</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-knob-quantity' + index" class="label-in-cart">
-                                Quantity
-                            </label>
-                            <input type="text"
-                                class="form-control" v-model="cartItem.product_variations.knobs_quantity">
-                        </div>
-    
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-knob-others' + index" class="label-in-cart">
-                                Others
-                            </label>
-                            <input type="text"
-                                class="form-control" v-model="cartItem.product_variations.other_knobs">
-                        </div>
-                    </div><!-- End row 4-->
+                                    class="form-control" v-model="cartItem.product_variations.handles_quantity">
+                            </div>
+        
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-handles-others' + index" class="label-in-cart">
+                                    Others
+                                </label>
+                                <input type="text"
+                                    class="form-control" v-model="cartItem.product_variations.other_hanldes">
+                            </div>
+        
+                        </div><!-- End row 4-->
+        
+                        <!-- Start row 4 For Knobs-->
+                        <div class="form-row mx-0 px-2  collapse-animation"
+                            :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-knobs-on-drawers-door' + index" class="label-in-cart">
+                                    Knobs On Drawers/Door
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.knobs_drawer_or_door" @change="getKnobsForVanity($event.target.value, cartItem, index)">
+                                    <option value="">Select Value</option>
+                                    <option value="drawers">Drawers</option>
+                                    <option value="door">Door</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
+        
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-knobs' + index" class="label-in-cart">
+                                    Knobs
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.knobs">
+                                    <option value="">Select Knobs</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-knob-quantity' + index" class="label-in-cart">
+                                    Quantity
+                                </label>
+                                <input type="text"
+                                    class="form-control" v-model="cartItem.product_variations.knobs_quantity">
+                            </div>
+        
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-knob-others' + index" class="label-in-cart">
+                                    Others
+                                </label>
+                                <input type="text"
+                                    class="form-control" v-model="cartItem.product_variations.other_knobs">
+                            </div>
+                        </div><!-- End row 4-->
 
-                    <!-- Start row 4 For Counter Top-->
-                    <div class="form-row mx-0 px-2  collapse-animation"
-                         :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
-                         <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-counter-top-yes-no' + index" class="label-in-cart">
-                                Counter Top
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_yes_no" @change="getCounterTopForVanity($event.target.value, cartItem, index)">
-                                <option value="">Select Value</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div>
-    
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-counter-top' + index" class="label-in-cart">
-                                Select Counter Top
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top">
-                                <option value="">Select Counter Top</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-counter-top-side-splash' + index" class="label-in-cart">
-                                Side Splash
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_side_splash">
-                                <option value="0">Select Value</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
-                                <option value="both">Both</option>
-                            </select>
-                        </div>
+                        <!-- Start row 4 For Counter Top-->
+                        <div class="form-row mx-0 px-2  collapse-animation"
+                            :class="{'collapsed':cartItem.showItemCollapse}" style="overflow:auto !important;">
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-counter-top-yes-no' + index" class="label-in-cart">
+                                    Counter Top
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_yes_no" @change="getCounterTopForVanity($event.target.value, cartItem, index)">
+                                    <option value="">Select Value</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+        
+                            <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-counter-top' + index" class="label-in-cart">
+                                    Select Counter Top
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top">
+                                    <option value="">Select Counter Top</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group pl-0 mb-zero col-2" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-counter-top-side-splash' + index" class="label-in-cart">
+                                    Side Splash
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_side_splash">
+                                    <option value="0">Select Value</option>
+                                    <option value="left">Left</option>
+                                    <option value="right">Right</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </div>
 
-                        <div class="form-group pl-0 mb-zero col-3" v-if="cartItem.isCustomization">
-                            <label :for="'cart-vanity-counter-top-back-splash' + index" class="label-in-cart">
-                                Back Splash
-                            </label>
-                            <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_back_splash">
-                                <option value="0">Select Value</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div>
+                            <div class="form-group pl-0 mb-zero col-2" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-counter-top-back-splash' + index" class="label-in-cart">
+                                    Back Splash
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_back_splash">
+                                    <option value="0">Select Value</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
 
-                    </div><!-- End row 4-->
+                            <div class="form-group pl-0 mb-zero col-2" v-if="cartItem.isCustomization">
+                                <label :for="'cart-vanity-counter-top-faucet-hole' + index" class="label-in-cart">
+                                    Faucet Hole
+                                </label>
+                                <select class="custom-select custom-tax-calculate"  v-model="cartItem.product_variations.counter_top_faucet_hole">
+                                    <option value="">Select Value</option>
+                                    <option value="single">Single</option>
+                                    <option value="four_inches">Four Inches</option>
+                                    <option value="eight_inches">Eight Inches</option>
+                                </select>
+                            </div>
 
-                </div>
+                        </div><!-- End row 4-->
+
+                    </div>
 
                 </template>
             </div>
@@ -1524,6 +1555,7 @@ export default {
                 time: moment().format('YYYY-MM-DD h:mm A'),
                 taxPercentage: this.custom_tax
             };
+            console.log("makeFinalCart > ", this.custom_tax);
         },
        
 
@@ -1599,34 +1631,34 @@ export default {
                         console.error("Error fetching product details:", error);
                     }
                 }
-            }
 
-            if (
-                Object.keys(newItemForKnobs).length &&
-                !this.cart.some(cartItem => cartItem.productID === newItemForKnobs.productID)
-            ) {
-                this.cart.push(newItemForKnobs);
-            }
+                if (
+                    Object.keys(newItemForKnobs).length &&
+                    !this.cart.some(cartItem => cartItem.productID === newItemForKnobs.productID)
+                ) {
+                    this.cart.push(newItemForKnobs);
+                }
 
-            if (
-                Object.keys(newItemForFillers).length &&
-                !this.cart.some(cartItem => cartItem.productID === newItemForFillers.productID)
-            ) {
-                this.cart.push(newItemForFillers);
-            }
+                if (
+                    Object.keys(newItemForFillers).length &&
+                    !this.cart.some(cartItem => cartItem.productID === newItemForFillers.productID)
+                ) {
+                    this.cart.push(newItemForFillers);
+                }
 
-            if (
-                Object.keys(newItemForHandles).length &&
-                !this.cart.some(cartItem => cartItem.productID === newItemForHandles.productID)
-            ) {
-                this.cart.push(newItemForHandles);
-            }
+                if (
+                    Object.keys(newItemForHandles).length &&
+                    !this.cart.some(cartItem => cartItem.productID === newItemForHandles.productID)
+                ) {
+                    this.cart.push(newItemForHandles);
+                }
 
-            if (
-                Object.keys(newItemForCounterTop).length &&
-                !this.cart.some(cartItem => cartItem.productID === newItemForCounterTop.productID)
-            ) {
-                this.cart.push(newItemForCounterTop);
+                if (
+                    Object.keys(newItemForCounterTop).length &&
+                    !this.cart.some(cartItem => cartItem.productID === newItemForCounterTop.productID)
+                ) {
+                    this.cart.push(newItemForCounterTop);
+                }
             }
         },
         updateCartItem(productVariations,productDetails, item, type){
@@ -1776,12 +1808,14 @@ export default {
         },
 
         fillerSize(value, cartItem, index) {
-            
-            this.getFillersForVanity(value, cartItem, index);
-            cartItem.product_variations.showFillerSize = !!value;
-            if (value === "1" || value === "2") {
+            if(value == 'yes'){
+                // this.getFillersForVanity(value, cartItem, index);
+                cartItem.product_variations.showFillerSize = !!value;
+                // if (value === "1" || value === "2") {
                 cartItem.product_variations.filler_size = 0.5;
-            } else {
+                // } 
+            }else{
+                
                 cartItem.product_variations.filler_size = ""; 
             }
 
@@ -1943,15 +1977,15 @@ export default {
                             }
     
                             // // Clear existing options except the first placeholder
-                            selectElement.innerHTML = '<option value="">Select Fillers</option>';
+                            selectElement.innerHTML = '<option value="">Select Counter Top</option>';
     
                             // // Add new options from the responseData array
-                            responseData.forEach((filler) => {
-                                console.log("filler > "+ filler);
-                                console.log("filler > "+ selectElement);
+                            responseData.forEach((countertop) => {
+                                console.log("counter-top > "+ countertop);
+                                console.log("counter-top > "+ selectElement);
                                 const option = document.createElement("option");
-                                option.value = filler.product_id;
-                                option.textContent = filler.title;
+                                option.value = countertop.product_id;
+                                option.textContent = countertop.title;
                                 selectElement.appendChild(option);
                             });
                         } else {
@@ -1964,50 +1998,7 @@ export default {
                 );
             }
         },
-
-        // getAllfillersWithoutZeroPrice() {
-        //     let instance = this;
-        //     instance.axiosGETorPOST(
-        //     {url: '/get-fillers'},
-        //     (success, responseData) => {
-        //         console.log(" getAllfillersWithoutZeroPrice > success :", success);
-        //         console.log(" getAllfillersWithoutZeroPrice > responseData :", responseData);
-        //         if (success) {
-        //             this.getFillers = responseData;
-        //             console.log(this.getFillers);
-        //             // tempData = responseData;
-        //             // _.mapValues(tempData, function (cashRegister) {
-        //             //     cashRegister.openingAmount = null;
-        //             //     cashRegister.openingTime = null;
-        //             //     cashRegister.closingAmount = null;
-        //             //     cashRegister.closingTime = null;
-        //             //     cashRegister.note = null;
-        //             //     cashRegister.showItemCollapse = false;
-        //             // });
-        //             // instance.cashRegisterList = tempData;
-        //         }
-        //         // if (instance.tempBranchID) {
-        //         //     let autoSelectCashRegister = _.filter(this.cashRegisterList, function (cashRegister) {
-        //         //         if (cashRegister.status === 'open' && _.includes(cashRegister.userID, instance.user.id.toString())) {
-
-        //         //             return cashRegister;
-        //         //         }
-        //         //     });
-        //         //     if (!_.isEmpty(autoSelectCashRegister)) {
-        //         //         instance.selectedCashRegisterID = autoSelectCashRegister[0].id;
-        //         //         instance.selectedCashRegisterName = autoSelectCashRegister[0].title;
-        //         //         instance.selectedCashRegisterBranchID = autoSelectCashRegister[0].branchID;
-        //         //         $('#branch-or-cash-register-select-modal').modal('hide');
-        //         //     }
-        //         //     instance.tempBranchID = null;
-        //         // }
-        //         // instance.getExpectedAmount(instance.selectedCashRegisterID);
-        //         // instance.hideCashRegisterPreLoader = true;
-        //         // instance.focusOnSearchBarWithOutTimeOut();
-        //     });
-
-        //     console.log(" this cart value from getAllfillersWithoutZeroPrice() function");
-        // },
+        
         axiosGETorPOSTAsync(instance, config) {
             return new Promise((resolve, reject) => {
                 instance.axiosGETorPOST(config, (success, responseData) => {
